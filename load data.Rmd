@@ -9,10 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(dplyr)
-
+library(feather)
 ```
 
 # Grupo Bimbo - Load Data
+
 
 ```{r}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
@@ -23,6 +24,7 @@ train <- tbl_df(read.csv("train.csv"))
 town_state <- tbl_df(read.csv("town_state.csv"))
 
 
+write_feather(train, "train.feather")
 
 ```
 
