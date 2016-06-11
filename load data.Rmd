@@ -1,0 +1,28 @@
+---
+title: "load data"
+author: "Keith Hultman"
+date: "June 10, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+
+```
+
+# Grupo Bimbo - Load Data
+
+```{r}
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+
+cliente <- tbl_df(read.csv("cliente_tabla.csv"))
+producto <- tbl_df(read.csv("producto_tabla.csv"))
+train <- tbl_df(read.csv("train.csv"))
+town_state <- tbl_df(read.csv("town_state.csv"))
+
+
+
+```
+
