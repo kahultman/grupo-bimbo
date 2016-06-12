@@ -66,7 +66,11 @@ test %>%
   group_by(Semana) %>%
   summarise(Number = n())
 
-
-
+# Unique Agencia
+train %>% summarise(n_distinct(Agencia_ID))
+# Unique Canal
+train %>% summarise(n_distinct(Canal_ID))
+# Unique Ruta
+train %>% summarise(n_distinct(Ruta_SAK))
 ```
 
