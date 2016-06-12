@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(dplyr)
+library(data.table)
 library(feather)
 ```
 
@@ -18,13 +19,54 @@ library(feather)
 ```{r}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
 
+# Using fread function to speed things up with the train.csv file
+train <- fread("train.csv", header = TRUE)
+train <- tbl_df(train)
+test <- fread("test.csv", header = TRUE)
+test <- tbl_df(test)
 cliente <- tbl_df(read.csv("cliente_tabla.csv"))
 producto <- tbl_df(read.csv("producto_tabla.csv"))
-train <- tbl_df(read.csv("train.csv"))
 town_state <- tbl_df(read.csv("town_state.csv"))
 
 
-write_feather(train, "train.feather")
+# Save originals as R dataframes
+save(cliente, file = "cliente.Rda")
+save(producto, file = "producto.Rda")
+save(town_state, file = "town_state.Rda")
+save(test, file = "test.Rda")
+
+# 
+system.time(save(train, file = "train.Rda"))
+# Test feather
+system.time(write_feather(train, "train.feather"))
+# only takes 1/3rd the time 
+```
+
+# Summarize Data
+
+```{r}
+# train
+train
+# test
+test
+# cliente file
+cliente
+# producto file
+producto
+# town_state file
+town_state
+
+# Weeks in training data set and number of samples per week
+train %>% 
+  group_by(Semana) %>%
+  summarise(Number = n())
+
+# Weeks and samples in the test set
+test %>%
+  group_by(Semana) %>%
+  summarise(Number = n())
+
+
 
 ```
 
