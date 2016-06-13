@@ -1,0 +1,62 @@
+---
+title: "data_exploration"
+author: "Keith Hultman"
+date: "June 13, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(data.table)
+library(feather)
+```
+# Summarize Data
+
+```{r}
+# train
+train
+# test
+test
+# clients file
+clients
+# products file
+products
+# town_state file
+town_state
+
+# Weeks in training data set and number of samples per week
+train %>% 
+  group_by(week) %>%
+  summarise(Number = n())
+
+# Weeks and samples in the test set
+test %>%
+  group_by(week) %>%
+  summarise(Number = n())
+
+# Unique Agencia
+train %>% summarise(n_distinct(depot))
+# Unique Canal
+train %>% summarise(n_distinct(channel))
+# Unique Ruta
+train %>% summarise(n_distinct(route))
+
+# The kaggle page mentioned products in the test set that were not in the train set
+train_products <- unique(train1$product)
+
+test_products <- unique(test$product)
+
+#Train products missing from test products
+train_products[!(train_products %in% test_products)]
+
+# Test products missing from train products
+new_products <- as.data.frame(test_products[!(test_products %in% train_products)])
+head(new_products)
+colnames(products)
+colnames(new_products) <- c("Producto_ID")
+new_products %>%
+  left_join(products, by = Producto_ID)
+
+
+```
