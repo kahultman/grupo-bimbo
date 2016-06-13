@@ -48,6 +48,10 @@ system.time(write_feather(train, "train.feather"))
 colnames(train) <- c("week", "depot", "channel", "route", "client", "product", "sales_units", "sales", "returns_units", "returns", "demand")
 
 colnames(test) <- c("id", "week", "depot", "channel", "route", "client", "product")
+
+
+
+
 ```
 
 
@@ -67,26 +71,35 @@ town_state
 
 # Weeks in training data set and number of samples per week
 train %>% 
-  group_by(Semana) %>%
+  group_by(week) %>%
   summarise(Number = n())
 
 # Weeks and samples in the test set
 test %>%
-  group_by(Semana) %>%
+  group_by(week) %>%
   summarise(Number = n())
 
 # Unique Agencia
-train %>% summarise(n_distinct(Agencia_ID))
+train %>% summarise(n_distinct(depot))
 # Unique Canal
-train %>% summarise(n_distinct(Canal_ID))
+train %>% summarise(n_distinct(channel))
 # Unique Ruta
-train %>% summarise(n_distinct(Ruta_SAK))
+train %>% summarise(n_distinct(route))
 ```
 
 
 ```{r Split into train and validation sets}
 
+train2 <- train %>% filter(week <= 7)
 
+train2 %>% 
+  group_by(week) %>%
+  summarise(Number = n())
 
+validate <- train %>% filter(week > 7)
+
+validate %>% 
+  group_by(week) %>%
+  summarise(Number = n())
 ```
 
