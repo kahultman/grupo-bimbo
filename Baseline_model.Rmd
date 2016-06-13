@@ -1,0 +1,32 @@
+---
+title: "Baseline Model"
+author: "Keith Hultman"
+date: "June 12, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+```
+
+```{r}
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+load("train2.Rdata")
+
+
+```
+
+# Persistant Baseline Model
+
+This model assumes that the previous week's demand will persist to the following two weeks. If a product or store id is not found in the training data, then the model will predict that the demand will be the average demand
+
+```{r}
+
+ave_product_demand <- train2 %>%
+  group_by(product) %>%
+  summarise(ave_demand = mean(demand))
+ave_product_demand
+
+```
+
