@@ -42,6 +42,15 @@ system.time(write_feather(train, "train.feather"))
 # only takes 1/3rd the time 
 ```
 
+
+```{r Rename Columns}
+
+colnames(train) <- c("week", "depot", "channel", "route", "client", "product", "sales_units", "sales", "returns_units", "returns", "demand")
+
+colnames(test) <- c("id", "week", "depot", "channel", "route", "client", "product")
+```
+
+
 # Summarize Data
 
 ```{r}
@@ -72,5 +81,12 @@ train %>% summarise(n_distinct(Agencia_ID))
 train %>% summarise(n_distinct(Canal_ID))
 # Unique Ruta
 train %>% summarise(n_distinct(Ruta_SAK))
+```
+
+
+```{r Split into train and validation sets}
+
+
+
 ```
 
