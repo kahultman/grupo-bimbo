@@ -1,0 +1,105 @@
+---
+title: "load data"
+author: "Keith Hultman"
+date: "June 10, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(data.table)
+library(feather)
+```
+
+# Grupo Bimbo - Load Data
+
+
+```{r}
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+
+# Using fread function to speed things up with the train.csv file
+train <- fread("train.csv", header = TRUE)
+train <- tbl_df(train)
+test <- fread("test.csv", header = TRUE)
+test <- tbl_df(test)
+clients <- tbl_df(read.csv("cliente_tabla.csv"))
+products <- tbl_df(read.csv("producto_tabla.csv"))
+town_state <- tbl_df(read.csv("town_state.csv"))
+
+
+# Save originals as R dataframes
+save(clients, file = "clients.Rda")
+save(products, file = "products.Rda")
+save(town_state, file = "town_state.Rda")
+save(test, file = "test.Rda")
+
+# 
+system.time(save(train, file = "train.Rda"))
+# Test feather
+system.time(write_feather(train, "train.feather"))
+# only takes 1/3rd the time 
+```
+
+
+```{r Rename Columns}
+
+colnames(train) <- c("week", "depot", "channel", "route", "client", "product", "sales_units", "sales", "returns_units", "returns", "demand")
+
+colnames(test) <- c("id", "week", "depot", "channel", "route", "client", "product")
+
+
+
+
+```
+
+
+# Summarize Data
+
+```{r}
+# train
+train
+# test
+test
+# clients file
+clients
+# products file
+products
+# town_state file
+town_state
+
+# Weeks in training data set and number of samples per week
+train %>% 
+  group_by(week) %>%
+  summarise(Number = n())
+
+# Weeks and samples in the test set
+test %>%
+  group_by(week) %>%
+  summarise(Number = n())
+
+# Unique Agencia
+train %>% summarise(n_distinct(depot))
+# Unique Canal
+train %>% summarise(n_distinct(channel))
+# Unique Ruta
+train %>% summarise(n_distinct(route))
+```
+
+
+```{r Split into train and validation sets}
+
+train2 <- train %>% filter(week <= 7)
+
+train2 %>% 
+  group_by(week) %>%
+  summarise(Number = n())
+
+validate <- train %>% filter(week > 7)
+
+validate %>% 
+  group_by(week) %>%
+  summarise(Number = n())
+```
+
