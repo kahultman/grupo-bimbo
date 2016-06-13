@@ -49,8 +49,11 @@ colnames(train) <- c("week", "depot", "channel", "route", "client", "product", "
 
 colnames(test) <- c("id", "week", "depot", "channel", "route", "client", "product")
 
+colnames()
 
+train1 <- train
 
+save(train1, file = "train1.Rdata")
 
 ```
 
@@ -101,5 +104,8 @@ validate <- train %>% filter(week > 7)
 validate %>% 
   group_by(week) %>%
   summarise(Number = n())
+
+save(train2, file = "train2.Rdata")
+save(validate, file = "validate.Rdata")
 ```
 
