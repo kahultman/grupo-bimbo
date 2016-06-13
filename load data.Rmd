@@ -106,6 +106,7 @@ validate %>%
   summarise(Number = n())
 
 save(train2, file = "train2.Rdata")
+write.csv(train2, file = "train2.csv")
 save(validate, file = "validate.Rdata")
 ```
 
