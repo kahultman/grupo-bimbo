@@ -54,6 +54,7 @@ colnames()
 train1 <- train
 
 save(train1, file = "train1.Rdata")
+save(test, file = "test.Rdata")
 
 ```
 
@@ -88,6 +89,24 @@ train %>% summarise(n_distinct(depot))
 train %>% summarise(n_distinct(channel))
 # Unique Ruta
 train %>% summarise(n_distinct(route))
+
+# The kaggle page mentioned products in the test set that were not in the train set
+train_products <- unique(train1$product)
+
+test_products <- unique(test$product)
+
+#Train products missing from test products
+train_products[!(train_products %in% test_products)]
+
+# Test products missing from train products
+new_products <- as.data.frame(test_products[!(test_products %in% train_products)])
+head(new_products)
+colnames(products)
+colnames(new_products) <- c("Producto_ID")
+new_products %>%
+  left_join(products, by = Producto_ID)
+
+
 ```
 
 
