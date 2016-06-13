@@ -13,7 +13,9 @@ library(data.table)
 library(feather)
 ```
 
-# Grupo Bimbo - Load Data
+# Grupo Bimbo
+
+## Load Data
 
 
 ```{r}
@@ -24,43 +26,31 @@ train <- fread("train.csv", header = TRUE)
 train <- tbl_df(train)
 test <- fread("test.csv", header = TRUE)
 test <- tbl_df(test)
+
+# Using standard read.csv for smaller data sets
 clients <- tbl_df(read.csv("cliente_tabla.csv"))
 products <- tbl_df(read.csv("producto_tabla.csv"))
 town_state <- tbl_df(read.csv("town_state.csv"))
 
 
-# Save originals as R dataframes
-save(clients, file = "clients.Rda")
-save(products, file = "products.Rda")
-save(town_state, file = "town_state.Rda")
-save(test, file = "test.Rda")
 
-# 
-system.time(save(train, file = "train.Rda"))
-# Test feather
-system.time(write_feather(train, "train.feather"))
-# only takes 1/3rd the time 
 ```
 
+## Traslate column names into English
 
-```{r Rename Columns}
+```{r Translate Columns}
 
 colnames(train) <- c("week", "depot", "channel", "route", "client", "product", "sales_units", "sales", "returns_units", "returns", "demand")
-
 colnames(test) <- c("id", "week", "depot", "channel", "route", "client", "product")
-
-colnames()
-
-train1 <- train
-
-save(train1, file = "train1.Rdata")
-save(test, file = "test.Rdata")
+colnames(clients) <- c("client", "client_name")
+colnames(products) <- c("product", "product_name")
+colnames(town_state) <- c("depot", "town", "state")
 
 ```
 
+## Split training set
 
-
-```{r Split into train and validation sets}
+```{r Split train into train and validation sets}
 
 train2 <- train %>% filter(week <= 7)
 
@@ -74,8 +64,32 @@ validate %>%
   group_by(week) %>%
   summarise(Number = n())
 
-save(train2, file = "train2.Rdata")
-write.csv(train2, file = "train2.csv")
-save(validate, file = "validate.Rdata")
+
 ```
+
+## Save data
+
+```{r}
+# Save as R dataframes, which take up less space than csv files
+# These files will be loaded into other scripts instead of the csv files
+
+system.time(save(train, file = "train.Rdata"))
+# Test feather
+system.time(write_feather(train, "train.feather"))
+# only takes 1/3rd the time 
+
+save(train2, file = "train2.Rdata")
+save(validate, file = "validate.Rdata")
+save(test, file = "test.Rdata")
+save(clients, file = "clients.Rdata")
+save(products, file = "products.Rdata")
+save(town_state, file = "town_state.Rdata")
+
+
+# Also saving as csv file for input into Microsoft Azure ML and other tools
+# write.csv(train2, file = "train2.csv")
+# 
+
+```
+
 
