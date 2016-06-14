@@ -7,6 +7,7 @@ library(data.table)
 library(dplyr)
 
 train_dt <- fread("data/train.csv")
+product_table <- fread("data/producto_tabla.csv")
 str(train_dt)
 typeof(train_dt)
 train_dt[1:3,]
@@ -23,8 +24,20 @@ train_dt[, .(count= .N), by = .(week) ]
 d1 <- tbl_df(train_dt)
 d1
 glimpse(train_dt)
+glimpse(product_table)
+d1 %>%
+  summarise(total_records = n(),
+            n_weeks = n_distinct(week))
 
-
+d1 %>%
+  group_by(week) %>%
+  summarise(total_sales_units = sum(sales_units),
+            max_returns = max(returns_units),
+            total_return_units = sum(returns_units),
+            unique_prdts = n_distinct(product)) %>%
+  arrange(week)
+train_dt[returns_units == 250000]
+product_table[Producto_ID == 3509]
 #create data table for weeks 3,4,5,6 and 7
 train_wk34567 <- train_dt[week %in% c(3,4,5,6,7)]
 
