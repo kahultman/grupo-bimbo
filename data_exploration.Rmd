@@ -74,24 +74,31 @@ new_products <- new_products %>%
 
 ```
 
+## From now on, only look at Train2 data set
+
 ```{r Some Visualizations}
+load("train2.Rdata")
+
 set.seed(65)
 product_sample <- products %>% 
   sample_n(15)
 product_sample
 
-train1 %>% 
+# Scatterplot of sample products
+train2 %>% 
   filter(product %in% product_sample$product) %>%
   ggplot(aes(x = week, y = demand)) +
   geom_point() +
   facet_wrap(~ product, scale = "free_y")
 
-product_trend_sample <- train1 %>% 
+# Trend lines of average demand over time for sample products
+product_trend_sample <- train2 %>% 
   filter(product %in% product_sample$product) %>%
   group_by(product, week) %>%
   summarise(ave_demand = mean(demand))
   
 product_trend_sample  
+
 ggplot(product_trend_sample, aes(x = week, y = ave_demand)) +
   geom_point() +
   stat_smooth() +
