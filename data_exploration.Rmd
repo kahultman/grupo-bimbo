@@ -22,12 +22,13 @@ load("validate.Rdata")
 load("test.Rdata")
 load("clients.Rdata")
 load("products.Rdata")
+load("town_state.Rdata")
 
 
 ```
 
 # Products missing in the train set that are in the kaggle test set
-The kaggle page mentioned products in the test set that were not in the train set
+The kaggle page mentioned that there will be products in the test set that were not in the train set
 ```{r}
 
 train1_products <- unique(train1$product)
@@ -44,9 +45,11 @@ colnames(new_products) <- c("product")
 new_products <- new_products %>%
   left_join(products, by = "product")
 
+# Number of products in test set missing in full training set:
+nrow(new_products)
 ```
 
-# Are there any products missing in train2 that are in validate test set?
+# What about for our split data? Are there any products missing in train2 that are in the validate test set?
 
 ```{r}
 
@@ -70,15 +73,16 @@ new_validate_products
 nrow(new_validate_products)
 ```
 
+This is good. We will be able to test how our model works for new products
 
-
-# Summarize Data
+# From now on, only look at Train2 data set
+## Summarize Data
 
 ```{r}
-# train
-train
-# test
-test
+# train2
+train2
+# validate
+validate
 # clients file
 clients
 # products file
@@ -87,41 +91,34 @@ products
 town_state
 
 # Weeks in training data set and number of samples per week
-train %>% 
+train2 %>% 
   group_by(week) %>%
   summarise(Number = n())
 
-# Weeks and samples in the test set
-test %>%
+# Weeks and samples in the validate set
+validate %>%
   group_by(week) %>%
   summarise(Number = n())
 
-# Unique Agencia
-train1 %>% summarise(n_distinct(depot))
-# Unique Canal
-train1 %>% summarise(n_distinct(channel))
-# Unique Ruta
-train1 %>% summarise(n_distinct(route))
-
+# Unique variables in train2 dataset
+train2 %>% summarise(Depots = n_distinct(depot), Channels = n_distinct(channel), Routes = n_distinct(route), Clients = n_distinct(client), Products = n_distinct(product))
 
 ```
 
-## From now on, only look at Train2 data set
+# Let's look at trends of random products across all clients. 
+I was wondering if there were some patterns of demand that crossed all stores. 
 
 ```{r Some Visualizations}
-load("train2.Rdata")
-
 set.seed(65)
-product_sample <- products %>% 
-  sample_n(15)
+product_sample <- products %>% sample_n(15)
 product_sample
 
 # Scatterplot of sample products
-train2 %>% 
-  filter(product %in% product_sample$product) %>%
-  ggplot(aes(x = week, y = demand)) +
-  geom_point() +
-  facet_wrap(~ product, scale = "free_y")
+# train2 %>% 
+#   filter(product %in% product_sample$product) %>%
+#   ggplot(aes(x = week, y = demand)) +
+#   geom_point() +
+#   facet_wrap(~ product, scale = "free_y")
 
 # Trend lines of average demand over time for sample products
 product_trend_sample <- train2 %>% 
@@ -136,7 +133,25 @@ ggplot(product_trend_sample, aes(x = week, y = ave_demand)) +
   stat_smooth() +
   facet_wrap(~ product, scale = "free_y")
 
+# Looking at the trend of one of those products, 5710
+product5710 <- train2 %>% 
+  filter(product == 5710) 
+  
+ggplot(product5710, aes(x = week, y = demand)) +
+  geom_point() +
+  stat_smooth() +
+  ggtitle("Demand for Product 5710")
 
+store_sample <- sample_n(as.data.frame(unique(product5710$client)), 9)
+colnames(store_sample) <- "clientsample"
+
+product5710_store_sample <- product5710 %>%
+  filter(client %in% store_sample$clientsample)
+
+ggplot(product5710_store_sample, aes(x = week, y = demand)) +
+  geom_point() +
+  facet_wrap(~client) +
+  ggtitle("Sample of stores for Product 5710")
 
 ```
 
