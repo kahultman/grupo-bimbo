@@ -10,7 +10,21 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(data.table)
 library(feather)
+library(ggplot2)
 ```
+# Load Data
+
+```{r}
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+load("train1.Rdata")
+load("test.Rdata")
+load("clients")
+load("products")
+
+
+```
+
+
 # Summarize Data
 
 ```{r}
@@ -36,11 +50,11 @@ test %>%
   summarise(Number = n())
 
 # Unique Agencia
-train %>% summarise(n_distinct(depot))
+train1 %>% summarise(n_distinct(depot))
 # Unique Canal
-train %>% summarise(n_distinct(channel))
+train1 %>% summarise(n_distinct(channel))
 # Unique Ruta
-train %>% summarise(n_distinct(route))
+train1 %>% summarise(n_distinct(route))
 
 # The kaggle page mentioned products in the test set that were not in the train set
 train_products <- unique(train1$product)
@@ -52,11 +66,38 @@ train_products[!(train_products %in% test_products)]
 
 # Test products missing from train products
 new_products <- as.data.frame(test_products[!(test_products %in% train_products)])
-head(new_products)
-colnames(products)
-colnames(new_products) <- c("Producto_ID")
-new_products %>%
-  left_join(products, by = Producto_ID)
+colnames(new_products) <- c("product")
+
+new_products <- new_products %>%
+  left_join(products, by = "product")
 
 
 ```
+
+```{r Some Visualizations}
+set.seed(65)
+product_sample <- products %>% 
+  sample_n(15)
+product_sample
+
+train1 %>% 
+  filter(product %in% product_sample$product) %>%
+  ggplot(aes(x = week, y = demand)) +
+  geom_point() +
+  facet_wrap(~ product, scale = "free_y")
+
+product_trend_sample <- train1 %>% 
+  filter(product %in% product_sample$product) %>%
+  group_by(product, week) %>%
+  summarise(ave_demand = mean(demand))
+  
+product_trend_sample  
+ggplot(product_trend_sample, aes(x = week, y = ave_demand)) +
+  geom_point() +
+  stat_smooth() +
+  facet_wrap(~ product, scale = "free_y")
+
+
+
+```
+
