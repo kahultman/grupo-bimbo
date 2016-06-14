@@ -17,12 +17,59 @@ library(ggplot2)
 ```{r}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
 load("train1.Rdata")
+load("train2.Rdata")
+load("validate.Rdata")
 load("test.Rdata")
-load("clients")
-load("products")
+load("clients.Rdata")
+load("products.Rdata")
 
 
 ```
+
+# Products missing in the train set that are in the kaggle test set
+The kaggle page mentioned products in the test set that were not in the train set
+```{r}
+
+train1_products <- unique(train1$product)
+
+test_products <- unique(test$product)
+
+#Train products missing from test products
+train1_products[!(train1_products %in% test_products)]
+
+# Test products missing from train products
+new_products <- as.data.frame(test_products[!(test_products %in% train1_products)])
+colnames(new_products) <- c("product")
+
+new_products <- new_products %>%
+  left_join(products, by = "product")
+
+```
+
+# Are there any products missing in train2 that are in validate test set?
+
+```{r}
+
+validate_products <- unique(validate$product)
+train2_products <- unique(train2$product)
+
+
+#Train2 products missing from validate products
+train2_products[!(train2_products %in% validate_products)]
+
+# Validate products missing from train2 products
+new_validate_products <- as.data.frame(validate_products[!(validate_products %in% train2_products)])
+colnames(new_validate_products) <- c("product")
+
+new_validate_products <- new_validate_products %>%
+  left_join(products, by = "product")
+
+new_validate_products 
+
+# Number of products in our validate test set that are not in our train2 data. We will need to have a naive model for new products. 
+nrow(new_validate_products)
+```
+
 
 
 # Summarize Data
@@ -55,21 +102,6 @@ train1 %>% summarise(n_distinct(depot))
 train1 %>% summarise(n_distinct(channel))
 # Unique Ruta
 train1 %>% summarise(n_distinct(route))
-
-# The kaggle page mentioned products in the test set that were not in the train set
-train_products <- unique(train1$product)
-
-test_products <- unique(test$product)
-
-#Train products missing from test products
-train_products[!(train_products %in% test_products)]
-
-# Test products missing from train products
-new_products <- as.data.frame(test_products[!(test_products %in% train_products)])
-colnames(new_products) <- c("product")
-
-new_products <- new_products %>%
-  left_join(products, by = "product")
 
 
 ```
