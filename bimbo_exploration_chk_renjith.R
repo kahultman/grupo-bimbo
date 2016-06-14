@@ -1,8 +1,11 @@
 #install.packages("feather", type = 'source')
 #install.packages("data.table")
 #library(feather)
+install.packages("dplyr")
 setwd("D:/r/wd/bimbo")
 library(data.table)
+library(dplyr)
+
 train_dt <- fread("data/train.csv")
 str(train_dt)
 typeof(train_dt)
@@ -15,4 +18,20 @@ colnames(train_dt)
 
 train_dt[, .(week, count = .N), by = week ]
 train_dt[, .(count= .N), by = .(week) ]
+
+# Exploring using dplyr
+d1 <- tbl_df(train_dt)
+d1
+glimpse(train_dt)
+
+
+#create data table for weeks 3,4,5,6 and 7
+train_wk34567 <- train_dt[week %in% c(3,4,5,6,7)]
+
+#create data table for 8 and 9
+train_wk89 <- train_dt[week %in% c(8,9)]
+
+
+
+
 
