@@ -1,5 +1,5 @@
 ---
-title: "data_exploration"
+title: "Data Exploration of Grupo Bimbo Data Set"
 author: "Keith Hultman"
 date: "June 13, 2016"
 output: html_document
@@ -27,16 +27,15 @@ load("town_state.Rdata")
 
 ```
 
-# Products missing in the train set that are in the kaggle test set
-The kaggle page mentioned that there will be products in the test set that were not in the train set
+# Products missing in the train set that are in the Kaggle test set
+The kaggle page mentioned that there will be products in the test set that were not in the train set. 
 ```{r}
 
 train1_products <- unique(train1$product)
-
 test_products <- unique(test$product)
 
-#Train products missing from test products
-train1_products[!(train1_products %in% test_products)]
+# Number of train products missing from test products
+nrow(train1_products[!(train1_products %in% test_products)])
 
 # Test products missing from train products
 new_products <- as.data.frame(test_products[!(test_products %in% train1_products)])
@@ -50,46 +49,60 @@ nrow(new_products)
 ```
 
 # What about for our split data? Are there any products missing in train2 that are in the validate test set?
-
+We are splitting the training set into a smaller training set and a validation set that we will use to train our models. 
 ```{r}
 
 validate_products <- unique(validate$product)
 train2_products <- unique(train2$product)
 
 
-#Train2 products missing from validate products
-train2_products[!(train2_products %in% validate_products)]
+# Train2 products missing from validate products
+# These products will have models, but will not be predicted with the validation data set
+nrow(train2_products[!(train2_products %in% validate_products)])
 
 # Validate products missing from train2 products
+# These products will not have a trained model prediction!
 new_validate_products <- as.data.frame(validate_products[!(validate_products %in% train2_products)])
 colnames(new_validate_products) <- c("product")
 
 new_validate_products <- new_validate_products %>%
   left_join(products, by = "product")
 
-new_validate_products 
+# new_validate_products 
 
 # Number of products in our validate test set that are not in our train2 data. We will need to have a naive model for new products. 
 nrow(new_validate_products)
 ```
 
-This is good. We will be able to test how our model works for new products
+This is good. We will be able to test how our model works for new products that are not in the training set. We will need to have some kind of naive model prediction for new products. 
 
-# From now on, only look at Train2 data set
+# From now on, only look at our split training data: the train2 data set
 ## Summarize Data
 
-```{r}
+### Data tables and columns
+These are the tables we have to work with. 
+```{r, echo=FALSE}
 # train2
+print("Training set")
 train2
 # validate
+print("Validation set")
 validate
 # clients file
+print("Client file")
 clients
 # products file
+print("Product file")
 products
 # town_state file
+print("Location file")
 town_state
 
+```
+
+### Overview of timeframe and sample sizes
+
+```{r}
 # Weeks in training data set and number of samples per week
 train2 %>% 
   group_by(week) %>%
@@ -105,13 +118,13 @@ train2 %>% summarise(Depots = n_distinct(depot), Channels = n_distinct(channel),
 
 ```
 
-# Let's look at trends of random products across all clients. 
+### Let's look at trends of random products across all clients. 
 I was wondering if there were some patterns of demand that crossed all stores. 
 
-```{r Some Visualizations}
+```{r Some Visualizations, warning=FALSE}
 set.seed(65)
 product_sample <- products %>% sample_n(15)
-product_sample
+# product_sample
 
 # Scatterplot of sample products
 # train2 %>% 
@@ -126,13 +139,19 @@ product_trend_sample <- train2 %>%
   group_by(product, week) %>%
   summarise(ave_demand = mean(demand))
   
-product_trend_sample  
+product_trend_sample  %>% summarise(n_distinct(product))
+# Of the 15 random products, 12 products have demand in this training set
 
 ggplot(product_trend_sample, aes(x = week, y = ave_demand)) +
   geom_point() +
   stat_smooth() +
-  facet_wrap(~ product, scale = "free_y")
+  facet_wrap(~ product, scale = "free_y") +
+  ggtitle("Average demand over time of 12 random products")
+```
 
+Let's look at demand for only one of those 12 products, product 5710
+
+```{r, warning=FALSE}
 # Looking at the trend of one of those products, 5710
 product5710 <- train2 %>% 
   filter(product == 5710) 
@@ -142,6 +161,11 @@ ggplot(product5710, aes(x = week, y = demand)) +
   stat_smooth() +
   ggtitle("Demand for Product 5710")
 
+```
+
+And a few random individual stores for this product:
+
+```{r, warning=FALSE}
 store_sample <- sample_n(as.data.frame(unique(product5710$client)), 9)
 colnames(store_sample) <- "clientsample"
 

@@ -48,6 +48,9 @@ colnames(town_state) <- c("depot", "town", "state")
 
 ```
 
+
+## 
+
 ## Split training set
 
 ```{r Split train into train and validation sets}
