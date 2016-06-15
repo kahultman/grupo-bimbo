@@ -49,7 +49,7 @@ colnames(town_state) <- c("depot", "town", "state")
 ```
 
 
-## 
+
 
 ## Split training set
 
@@ -69,6 +69,48 @@ validate %>%
 
 
 ```
+
+## Set Data Types
+
+```{r}
+train2
+train2$depot <- as.factor(train2$depot)
+train2$channel <- as.factor(train2$channel)
+train2$client <- as.factor(train2$client)
+train2$product <- as.factor(train2$product)
+train2$route <- as.factor(train2$route)
+
+#train1
+train1$depot <- as.factor(train1$depot)
+train1$channel <- as.factor(train1$channel)
+train1$client <- as.factor(train1$client)
+train1$product <- as.factor(train1$product)
+train1$route <- as.factor(train1$route)
+
+#validate
+validate$depot <- as.factor(validate$depot)
+validate$channel <- as.factor(validate$channel)
+validate$client <- as.factor(validate$client)
+validate$product <- as.factor(validate$product)
+validate$route <- as.factor(validate$route)
+
+#clients
+clients$client <- as.factor(clients$client)
+
+#products
+products$product <- as.factor(product)
+
+#town_state
+town_state$depot <- as.factor(town_state$depot)
+
+#test
+test$depot <- as.factor(test$depot)
+test$channel <- as.factor(test$channel)
+test$client <- as.factor(test$client)
+test$product <- as.factor(test$product)
+test$route <- as.factor(test$route)
+```
+
 
 ## Save data
 
