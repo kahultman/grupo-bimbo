@@ -1,0 +1,39 @@
+---
+title: "Data Exploration of Grupo Bimbo Data Set"
+author: "Keith Hultman"
+date: "June 13, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(data.table)
+library(feather)
+library(ggplot2)
+```
+# Load Data
+
+```{r}
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+load("train1.Rdata")
+load("train2.Rdata")
+load("validate.Rdata")
+load("test.Rdata")
+load("clients.Rdata")
+load("products.Rdata")
+load("town_state.Rdata")
+
+
+```
+
+Although there are no NA's or NULLs in the data set, there appears to be many products where demand might be zero, but might not be present as zeroes in the data. 
+
+## Missing data?
+
+```{r}
+
+```
+
+
+

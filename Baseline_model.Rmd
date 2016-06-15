@@ -12,7 +12,7 @@ library(dplyr)
 
 ```{r}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
-#load("train2.Rdata")
+load("train2.Rdata")
 
 
 ```
@@ -27,6 +27,8 @@ This model assumes that the previous week's demand will persist to the following
 #   group_by(product) %>%
 #   summarise(ave_demand = mean(demand))
 # ave_product_demand
+
+
 
 ```
 

@@ -179,3 +179,11 @@ ggplot(product5710_store_sample, aes(x = week, y = demand)) +
 
 ```
 
+This is revealing. Although there are no NA's or NULLs in the data set, there appears to be many products where demand might be zero, but might not be present as zeroes in the data. 
+
+## Missing data?
+
+```{r}
+
+```
+
