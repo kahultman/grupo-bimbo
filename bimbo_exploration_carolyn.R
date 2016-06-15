@@ -1,23 +1,35 @@
 #Exploratory Analysis - Carolyn Meier
 
+setwd("C:\\Users\\carolyn.meier\\Desktop\\Data")
+path_in <- "C:\\Users\\carolyn.meier\\Desktop\\Data"
+
 library(dplyr)
 library(data.table)
+library(ggplot2)
 
-setwd("P:\\Personal\\Data Mining")
+load("train2.Rda")
+load("validate.Rda")
 
-# Using fread function to speed things up with the train.csv file
-train <- fread("train.csv", header = TRUE)
-train <- tbl_df(train)
-test <- fread("test.csv", header = TRUE)
-test <- tbl_df(test)
+#-------------------------------------------------------------------------------
+#Relationship Sales Units/Return Units/Sales/Returns/Demands
 
-# Using standard read.csv for smaller data sets
-clients <- tbl_df(read.csv("cliente_tabla.csv"))
-products <- tbl_df(read.csv("producto_tabla.csv"))
-town_state <- tbl_df(read.csv("town_state.csv"))
+sales_units <-train2$sales_units
+sales <-train2$sales
+return_units <-train2$returns_units
+returns <-train2$returns
 
+#relationship between some key variables - Kind of what I expected
+#0.727
+cor(sales_units, sales)
+#0.0534
+cor(sales_units, return_units)
+#0.056
+cor(sales_units, returns)
+#0.879
+cor(return_units, returns)
 
-colnames(train) <- c("week", "depot", "channel", "route", "client", "product", "sales_units", "sales", "returns_units", "returns", "demand")
-
-colnames(test) <- c("id", "week", "depot", "channel", "route", "client", "product")
+#Are there certain products that generally don't/do have retunrs?
+returns_sales_trends <- train2 %>% 
+  group_by(product, week) %>%
+  summarise(avg_sales_units = mean(sales_units), avg_sales = mean(sales), avg_returns_units = mean(return_units), avg_returns = mean(returns))
 
