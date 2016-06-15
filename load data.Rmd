@@ -17,7 +17,6 @@ library(feather)
 
 ## Load Data
 
-
 ```{r}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
 
@@ -31,30 +30,21 @@ test <- tbl_df(test)
 clients <- tbl_df(read.csv("cliente_tabla.csv"))
 products <- tbl_df(read.csv("producto_tabla.csv"))
 town_state <- tbl_df(read.csv("town_state.csv"))
-
-
-
 ```
 
 ## Translate column names into English
 
 ```{r Translate Columns}
-
 colnames(train) <- c("week", "depot", "channel", "route", "client", "product", "sales_units", "sales", "returns_units", "returns", "demand")
 colnames(test) <- c("id", "week", "depot", "channel", "route", "client", "product")
 colnames(clients) <- c("client", "client_name")
 colnames(products) <- c("product", "product_name")
 colnames(town_state) <- c("depot", "town", "state")
-
 ```
-
-
-
 
 ## Split training set
 
 ```{r Split train into train and validation sets}
-
 train2 <- train %>% filter(week <= 7)
 
 train2 %>% 
@@ -66,8 +56,6 @@ validate <- train %>% filter(week > 7)
 validate %>% 
   group_by(week) %>%
   summarise(Number = n())
-
-
 ```
 
 ## Set Data Types
@@ -111,7 +99,6 @@ test$product <- as.factor(test$product)
 test$route <- as.factor(test$route)
 ```
 
-
 ## Save data
 
 ```{r}
@@ -124,6 +111,7 @@ system.time(write_feather(train, "train.feather"))
 # only takes 1/3rd the time 
 
 save(train2, file = "train2.Rdata")
+save(train1, file = "train1.Rdata")
 save(validate, file = "validate.Rdata")
 save(test, file = "test.Rdata")
 save(clients, file = "clients.Rdata")
@@ -134,7 +122,4 @@ save(town_state, file = "town_state.Rdata")
 # Also saving as csv file for input into Microsoft Azure ML and other tools
 # write.csv(train2, file = "train2.csv")
 # 
-
 ```
-
-
