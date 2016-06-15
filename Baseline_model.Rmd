@@ -12,7 +12,7 @@ library(dplyr)
 
 ```{r}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
-load("train2.Rdata")
+#load("train2.Rdata")
 
 
 ```
@@ -23,13 +23,30 @@ This model assumes that the previous week's demand will persist to the following
 
 ```{r}
 
-ave_product_demand <- train2 %>%
-  group_by(product) %>%
-  summarise(ave_demand = mean(demand))
-ave_product_demand
+# ave_product_demand <- train2 %>%
+#   group_by(product) %>%
+#   summarise(ave_demand = mean(demand))
+# ave_product_demand
 
 ```
 
+# Evaluation
+
+We are using the Root Mean Squared Logarithmic Error, or RMSLE. 
+
+$$\epsilon = \sqrt{\frac{1}{n} \sum_{i=1}^{n} \big(log(p_i + 1)-log(a_i + 1)\big)^2}$$
+
+Where:
+
+$\epsilon$ is the RMSLE value (score)
+
+$n$ is the total number of observations in the data set,
+
+$p_i$ is the prediction of demand
+
+$a_i$ is the actual demand for $i$
+
+$log(x)$ is the natural logarithm of $x$
 
 
 ```{r RMSLE}
