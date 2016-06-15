@@ -13,26 +13,33 @@ library(dplyr)
 ```{r}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
 load("train2.Rdata")
+load("validate.Rdata")
 
+validate$sales_units <- NULL
+validate$sales <- NULL
+validate$returns <- NULL
+validate$returns_units <- NULL
 
 ```
 
 # Persistant Baseline Model
 
-This model assumes that the previous week's demand will persist to the following two weeks. If a product or store id is not found in the training data, then the model will predict that the demand will be the average demand
+This model assumes that the previous week's demand will persist to the following two weeks. If a product or store id is not found in the training data, then the model will predict that the demand will be the overall average demand.
 
 ```{r}
+train_last_week <- train2 %>% 
+  filter(week >= 7) %>% 
+  transmute(client, product, prediction = demand)
 
-# ave_product_demand <- train2 %>%
-#   group_by(product) %>%
-#   summarise(ave_demand = mean(demand))
-# ave_product_demand
+validate <- left_join(validate, train_last_week, by = c("client", "product"))
+validate$prediction[is.na(validate$prediction)] <- mean(train2$demand)
 
+# save(validate, file = "baseline_predictions.Rdata")
 
 
 ```
 
-# Evaluation
+## Evaluation
 
 We are using the Root Mean Squared Logarithmic Error, or RMSLE. 
 
@@ -53,6 +60,11 @@ $log(x)$ is the natural logarithm of $x$
 
 ```{r RMSLE}
 
+sqerror <- (log(validate$prediction + 1) - log(validate$demand + 1))^2
+epsilon <- sqrt(sum(sqerror) / length(sqerror))
+
+epsilon
+  
 
 ```
 
