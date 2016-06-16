@@ -1,0 +1,50 @@
+---
+title: "bimbo_data_explore2_renjith"
+author: "Renjith Madhavan"
+date: "June 15, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("ggplot2")
+library(dplyr)
+library(data.table)
+library(feather)
+library(ggplot2)
+```
+
+# Load Data from the Rdata files saved earlier
+```{r}
+setwd("D:/r/wd/bimbo")
+load("data/rdf/clients.Rdata")
+load("data/rdf/products.Rdata")
+load("data/rdf/test.Rdata")
+load("data/rdf/town_state.Rdata")
+load("data/rdf/train.Rdata")
+load("data/rdf/train2.Rdata")
+load("data/rdf/validate.Rdata")
+
+```
+
+
+# Basic Data Exploration
+```{r}
+str(train)
+dim(train)
+summary(train)
+str(clients)
+str(products)
+str(town_state)
+head(products)
+```
+
+# Some basic plotting
+ggplot(train2[ product == 9 ], aes(x = week, y = returns)) +
+  geom_point()
+
+
+
+
+
+
