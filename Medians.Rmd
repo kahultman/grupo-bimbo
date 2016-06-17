@@ -1,0 +1,77 @@
+---
+title: "Moving Average"
+author: "Keith Hultman"
+date: "June 17, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+load("train2.Rdata")
+load("validate.Rdata")
+
+validate$sales_units <- NULL
+validate$sales <- NULL
+validate$returns <- NULL
+validate$returns_units <- NULL
+validate$depot<- NULL
+validate$channel <- NULL
+validate$route <- NULL
+```
+
+# Average Demand model
+This model predicts that the demand for a product is the median demand for each client and product. If the client product median is not available, it will use the product median demand. If the product median is not available it will use the overall median demand. 
+
+```{r}
+# Find the overall median demand
+overall <- median(train2$demand)
+overall
+
+
+# Product median demand
+product <- train2 %>%
+  group_by(product) %>%
+  summarise(p_d = median(demand))
+
+product
+
+# Product/Client median demand
+product_client <- train2 %>%
+  group_by(product, client) %>%
+  summarise(p_c_d = median(demand))
+
+save(product_client, file = "product_client.RData")
+
+validate
+
+validate <- left_join(validate, product_client, by = c("product", "client"))
+
+validate <- left_join(validate, product, by = "product")
+
+validate$pred <- validate$p_c_d
+validate$pred[is.na(validate$pred)] <- validate$p_d[is.na(validate$pred)]
+sum(is.na(validate$pred))
+#looks like there are no NA's left
+# if there were, the following would put the overall median in
+# validate$pred[is.na(validate$pred)] <- overall
+
+
+```
+
+
+Evaluation
+
+```{r RMSLE}
+
+sqerror <- (log(validate$pred + 1) - log(validate$demand + 1))^2
+epsilon <- sqrt(sum(sqerror) / length(sqerror))
+
+epsilon
+  
+
+```
+
