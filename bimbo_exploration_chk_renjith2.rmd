@@ -39,9 +39,49 @@ str(town_state)
 head(products)
 ```
 
+# using dplyr to summarize data
+# Exploring some sample products
+```{r}
+head(train2)
+p1240 <- filter(train2, product == 1240)
+filter(products, product == 1240)
+dim(p1240)
+head(p1240)
+mean(p1240$demand)
+median(p1240$demand)
+summary(p1240$demand)
+filter(p1240, demand > 1000)
+hist(log(p1240$demand))
+summarise(p1240, min_returns = min(returns), max_returns = max(returns), 
+          mean_returns = mean(returns), median_returns = median(returns))
+summarise(p1240, no_txns=n(),
+          total_sales_units=sum(sales_units),
+          total_returns_units=sum(returns_units))
+
+p1240 %>%
+  filter(demand > 500) %>%
+  summarise(num=n())
+train2_weekly_sales <- 
+train2 %>%
+  group_by(week) %>%
+  summarise(sales_units=sum(sales_units),
+            return_units=sum(returns_units)) %>%
+            #return_percent=(sum(sales_units-returns_units)/sum(sales_units)*100)) %>%
+  arrange(week)
+train2_weekly_sales
+```
+
 # Some basic plotting
-ggplot(train2[ product == 9 ], aes(x = week, y = returns)) +
+ggplot(train2_weekly_sales, aes(x = week, y = paste0(round(sales_units/1e6, 2), "$", "M"), col=return_units)) +
   geom_point()
+
+ggplot(train2_weekly_sales, aes(x = week, y = paste0(round(sales_units/1e6, 2), "$", "M"))) +
+  geom_point()
+#
+ggplot(train2_weekly_sales, aes(x = week, y = round(sales_units/1000000,2))) +
+  geom_point() + geom_smooth()
+
+  
 
 
 
