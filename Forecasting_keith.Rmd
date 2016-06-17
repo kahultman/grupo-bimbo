@@ -1,0 +1,49 @@
+---
+title: "Forecasting"
+author: "Keith Hultman"
+date: "June 16, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+```
+
+```{r}
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+load("train2.Rdata")
+
+example <- train2 %>% 
+  filter(product == 5710) %>%
+  filter(client == 48572)
+
+example
+# note that this is missing week 5 data
+example$demand
+
+# put demand into time series. 
+example.ts <- ts(example$demand, start = 3, end = 7, frequency = 1)
+example.ts
+# if we don't fill in that missing data, then the time series will start over from the first observation
+
+week5 <- data.frame(week=5, depot="1355", channel="2", route="1606", client="48572", product="5710", sales_units= 0, sales= 0, returns_units= 0, returns= 0, demand=NA)
+
+example_complete <- example %>%
+  bind_rows(week5) %>%
+  arrange(week)
+
+example_complete
+example.ts <- ts(example_complete$demand, start = 3, end = 7, frequency = 1)
+example.ts
+
+?arima
+
+example.arima <- arima(example.ts)
+example.arima
+
+example.predict <- predict(example.arima, n.ahead=2)
+example.predict$pred
+ts.plot(example.ts, example.predict$pred, lty=1:2)
+```
+
