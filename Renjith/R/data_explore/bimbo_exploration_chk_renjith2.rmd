@@ -12,6 +12,9 @@ library(dplyr)
 library(data.table)
 library(feather)
 library(ggplot2)
+library(scales)
+#install.packages("treemap")
+library(treemap)
 ```
 
 # Load Data from the Rdata files saved earlier
@@ -22,8 +25,8 @@ load("data/rdf/products.Rdata")
 load("data/rdf/test.Rdata")
 load("data/rdf/town_state.Rdata")
 load("data/rdf/train.Rdata")
-load("data/rdf/train2.Rdata")
-load("data/rdf/validate.Rdata")
+#load("data/rdf/train2.Rdata")
+#load("data/rdf/validate.Rdata")
 
 ```
 
@@ -32,59 +35,104 @@ load("data/rdf/validate.Rdata")
 ```{r}
 str(train)
 dim(train)
-summary(train)
+#summary(train)
 str(clients)
 str(products)
 str(town_state)
 head(products)
 ```
 
+
+
 # using dplyr to summarize data
 # Exploring some sample products
 ```{r}
-head(train2)
-p1240 <- filter(train2, product == 1240)
-filter(products, product == 1240)
-dim(p1240)
-head(p1240)
-mean(p1240$demand)
-median(p1240$demand)
-summary(p1240$demand)
-filter(p1240, demand > 1000)
-hist(log(p1240$demand))
-summarise(p1240, min_returns = min(returns), max_returns = max(returns), 
-          mean_returns = mean(returns), median_returns = median(returns))
-summarise(p1240, no_txns=n(),
-          total_sales_units=sum(sales_units),
-          total_returns_units=sum(returns_units))
-
-p1240 %>%
-  filter(demand > 500) %>%
-  summarise(num=n())
-train2_weekly_sales <- 
-train2 %>%
-  group_by(week) %>%
-  summarise(sales_units=sum(sales_units),
-            return_units=sum(returns_units)) %>%
-            #return_percent=(sum(sales_units-returns_units)/sum(sales_units)*100)) %>%
-  arrange(week)
-train2_weekly_sales
+# head(train2)
+# p1240 <- filter(train2, product == 1240)
+# filter(products, product == 1240)
+# dim(p1240)
+# head(p1240)
+# mean(p1240$demand)
+# median(p1240$demand)
+# summary(p1240$demand)
+# filter(p1240, demand > 1000)
+# hist(log(p1240$demand))
+# summarise(p1240, min_returns = min(returns), max_returns = max(returns), 
+#           mean_returns = mean(returns), median_returns = median(returns))
+# summarise(p1240, no_txns=n(),
+#           total_sales_units=sum(sales_units),
+#           total_returns_units=sum(returns_units))
+# 
+# p1240 %>%
+#   filter(demand > 500) %>%
+#   summarise(num=n())
+# train2_weekly_sales <- 
+# train2 %>%
+#   group_by(week) %>%
+#   summarise(sales_units=sum(sales_units),
+#             return_units=sum(returns_units)) %>%
+#             #return_percent=(sum(sales_units-returns_units)/sum(sales_units)*100)) %>%
+#   arrange(week)
+# train2_weekly_sales
 ```
 
 # Some basic plotting
-ggplot(train2_weekly_sales, aes(x = week, y = paste0(round(sales_units/1e6, 2), "$", "M"), col=return_units)) +
-  geom_point()
+```{r}
+# ggplot(train2_weekly_sales, aes(x = week, y = paste0(round(sales_units/1e6, 2), "$", "M"), col=return_units)) +
+#   geom_point()
+# 
+# ggplot(train2_weekly_sales, aes(x = week, y = paste0(round(sales_units/1e6, 2), "$", "M"))) +
+#   geom_point()
+# 
+# ggplot(train2_weekly_sales, aes(x = week, y = round(sales_units/1000000,2))) +
+#   geom_point() + geom_smooth()
+```
 
-ggplot(train2_weekly_sales, aes(x = week, y = paste0(round(sales_units/1e6, 2), "$", "M"))) +
-  geom_point()
-#
-ggplot(train2_weekly_sales, aes(x = week, y = round(sales_units/1000000,2))) +
-  geom_point() + geom_smooth()
 
-  
+# Analysis data per week
+```{r}
+ggplot(train %>% sample_frac(0.005))+
+  geom_histogram(aes(x=week), alpha=0.5)+
+  scale_x_continuous(breaks=1:10)+
+  scale_y_continuous(name="Transactions")+
+  theme_light()
+
+ggplot(train %>% sample_frac(0.005))+
+  geom_bar(aes(x=week), alpha=0.5)+
+  scale_x_continuous(breaks=1:10)+
+  scale_y_continuous(name="Transactions")+
+  theme_light()
+```
+
+# Analyse depots and states
+
+```{r}
+depots_summary <- train %>%
+  group_by(depot) %>%
+  summarise(Sales_Units = sum(sales_units),
+            Sales_Dollars = sum(sales),
+            Return_Units = sum(returns_units),
+            Return_Dollars = sum(returns),
+            Net_Demand = sum(demand)) %>%
+  mutate(Net_Revenue = Sales_Dollars - Return_Dollars,
+         Return_Rate = Return_Units / (Sales_Units+Return_Units)) %>%
+  arrange(desc(Sales_Units)) %>%
+  inner_join(town_state, by="depot")
+depots_summary[1:10,]
+
+ggplot(depots_summary, aes(x=Sales_Units/7))+
+  geom_histogram(color="black", binwidth=10000, alpha=0.5)+
+  scale_x_continuous(name="Sales Units / Week", labels=function(x)paste(x/1000, "k"))+
+  scale_y_continuous(name="Depot")+
+  theme_bw()
+
+treemap(depots_summary[1:100, ], 
+        index=c("depot"), vSize="Sales_Units", vColor="Return_Rate", 
+        palette=c("#1aff1a", "#ccffcc","#003300"),
+        type="value", title.legend="Units return %", title="Top 100 Depot's")
 
 
-
+```
 
 
 
