@@ -134,5 +134,182 @@ treemap(depots_summary[1:100, ],
 
 ```
 
+```{r, fig.height=8}
+depots.history <- train %>%
+  group_by(depot, week) %>%
+  summarise(Sales_Units = sum(sales_units),
+            Sales_Dollars = sum(sales),
+            Return_Units = sum(returns_units),
+            Return_Dollars = sum(returns),
+            Net_Demand = sum(demand)) %>%
+  mutate(Net_Revenue = Sales_Dollars - Return_Dollars,
+         average_sales_dollars=Sales_Dollars/Sales_Units,
+         Return_Rate = Return_Units / (Sales_Units+Return_Units)) %>%
+  arrange(depot, week) %>%
+  inner_join(town_state, by="depot")
+
+depots.history[1:4,]
+town_state[1:4,]
+```
+
+```{r}
+top30depot <- depots_summary$depot[1:30]
+top100depot <- depots_summary$depot[1:100]
+```
+
+```{r}
+ggplot(depots.history %>% filter(depot %in% top30depot))+
+  geom_bar(aes(x=week, y=Sales_Units, fill=Return_Rate), stat="identity", color="black")+
+  facet_wrap(~depot)+
+  scale_y_continuous(labels=function(x)paste(x/1000, "k"))+
+  scale_fill_gradient(name="Units\nReturn %", low="white", high="red")+
+  ggtitle("Top 30 depots")+
+  theme_bw()
+
+states <- depots.history %>%
+  group_by(state, week) %>%
+  summarise(Sales_Units = sum(Sales_Units),
+            Sales_Dollars = sum(Sales_Dollars),
+            Return_Units = sum(Return_Units),
+            Return_Dollars = sum(Return_Dollars),
+            Net_Demand = sum(Net_Demand)) %>%
+  mutate(Average_sales_dollars = Sales_Dollars / Sales_Units,
+         Return_Rate = Return_Units / (Sales_Units+Return_Units)) %>%
+  arrange(desc(Sales_Units))
+
+states[1:10,]
+
+ggplot(states)+
+  geom_bar(aes(x=week, y=Sales_Units, fill=Return_Rate), stat="identity", color="black")+
+  scale_y_continuous(labels=function(x)paste(x/1e6, "m"))+
+  scale_fill_gradient(name="Units\nReturn %", low="white", high="red")+
+  facet_wrap(~state)+
+  ggtitle("States")+
+  theme_bw()
+
+```
+
+
+# Channels
+```{r}
+channel_summary <- train %>%
+  group_by(channel, week) %>%
+  summarise(Sales_Units = sum(sales_units),
+            Sales_Dollars = sum(sales),
+            Return_Units = sum(returns_units),
+            Return_Dollars = sum(returns),
+            Net_Demand = sum(demand)) %>%
+  mutate(Net_Revenue = Sales_Dollars - Return_Dollars,
+         average_sales_dollars=Sales_Dollars/Sales_Units,
+         Return_Rate = Return_Units / (Sales_Units+Return_Units)) %>%
+  arrange(desc(Sales_Units))
+channel_summary[1:10,]
+
+treemap(channel_summary, index=c("channel"), vSize="Sales_Units", type="index", title="Sales by Channel")
+
+distinct_channel = unique(train$channel)
+distinct_channel
+ggplot(channel_summary)+
+  geom_bar(aes(x=week, y=Sales_Units, fill=Return_Rate), stat="identity", color="black")+
+  scale_y_continuous(labels=function(x)paste(x/1e6, "m"))+
+  scale_fill_gradient(name="Units\nReturn %", low="white", high="red")+
+  facet_wrap(~channel, scale="free")+
+  theme_bw()
+```
+
+# Channels and depots
+
+```{r}
+depots.channels <- train %>%
+  group_by(depot) %>%
+  summarise(n_channels = n_distinct(channel))
+depots.channels[1:10,]
+
+ggplot(depots.channels)+
+  geom_histogram(aes(x=n_channels), fill="red", color="black", alpha="0.3", binwidth=0.5)+
+  scale_x_continuous(name="Number of Channels", breaks=1:5)+
+  scale_y_continuous(name="Number of Depots")+
+  theme(axis.text.x=element_text(hjust=1))+
+  theme_bw()
+
+
+```
+
+# Routes
+
+```{r}
+routes_summary <- train %>% group_by(route) %>%
+  summarise(n_depots = n_distinct(depot),
+            n_clients = n_distinct(client),
+            Sales_Units = sum(sales),
+            Return_Units = sum(returns)) %>%
+  mutate(Return_Rate = Return_Units/(Sales_Units + Return_Units)) %>%
+  arrange(desc(Sales_Units))
+
+routes_summary[1:10,]
+
+ggplot(routes_summary[1:1000,], aes(x=Sales_Units/7))+
+  geom_histogram(fill="red", color="gray", binwidth=5000)+
+  scale_x_continuous(name="Sales Units / Week", labels=function(x)paste(x/1000, "k"))+
+  scale_y_continuous(name="Routes")+
+  theme_bw()
+
+top100routes <- routes_summary$route[1:100]
+
+```
+
+# Routes and depots
+
+
+```{r}
+routes.depots <- train %>% group_by(route, depot) %>%
+  summarise(count=n(),
+            n_Clients = n_distinct(client),
+            Sales_Units = sum(sales_units),
+            Return_Units = sum(returns_units)) %>%
+  mutate(Return_Rate = Return_Units / (Sales_Units+Return_Units)) %>%
+  arrange(desc(Sales_Units))
+
+ggplot(routes.depots %>% 
+         filter(route %in% top100routes, depot %in% top100depot))+
+  geom_point(aes(x=as.character(route), 
+                 y=as.character(depot), 
+                 size=Sales_Units, color=Return_Rate))+
+  scale_x_discrete(name="Routes")+
+  scale_y_discrete(name="Depots")+
+  scale_color_gradient(name="Return Rate", low="blue", high="red")+
+  ggtitle("Top 100 depots & routes")+
+  theme_bw()+
+  theme(axis.line=element_blank(),
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank())
+
+```
+
+# Analysing Clients
+
+```{r, fig.height=8}
+client.summary <- train %>%
+  group_by(client) %>%
+  summarise(Sales_Units = sum(sales_units),
+            Sales_Dollars = sum(sales),
+            Return_Units = sum(returns_units),
+            Return_Dollars = sum(returns),
+            Net_Demand = sum(demand)) %>%
+  mutate(Return_Rate = Return_Units / (Sales_Units+Return_Units),
+         average_sales_dollars=Sales_Dollars/Sales_Units) %>%
+  mutate(Net_Revenue = Sales_Dollars - Return_Dollars) %>%
+  inner_join(clients, by="client") %>%
+  arrange(desc(Sales_Dollars))
+
+treemap(client.summary[1:100, ], 
+        index=c("client_name"), vSize="Sales_Units", vColor="Return_Rate", 
+        palette=c("#FFFFFF","#FFFFFF","#FF0000"),
+        type="value", title.legend="Units return %", title="Top 100 clients")
+
+```
+
+
+
 
 
