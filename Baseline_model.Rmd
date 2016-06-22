@@ -19,7 +19,7 @@ validate$sales_units <- NULL
 validate$sales <- NULL
 validate$returns <- NULL
 validate$returns_units <- NULL
-
+validate
 ```
 
 # Persistant Baseline Model
@@ -32,9 +32,23 @@ train_last_week <- train2 %>%
   transmute(client, product, prediction = demand)
 
 train_last_week 
-train_last_week2 <- train_last_week %>% group_by(client, product) %>% summarise(prediction = sum(prediction))
+train_last_week2 <- train_last_week %>% 
+  group_by(client, product) %>% 
+  summarise(prediction = sum(prediction))
 
+validate2 <- validate %>%
+  group_by(client, product) %>% 
+  summarise(number = n()) %>%
+  ungroup()
+
+
+table(validate2$number)
+
+
+
+validate <- left_join(validate, validate2, by = c("client", "product"))
 validate <- left_join(validate, train_last_week2, by = c("client", "product"))
+validate$prediction <- validate$prediction / validate$number
 validate$prediction[is.na(validate$prediction)] <- mean(train2$demand)
 validate
 save(validate, file = "baseline_predictions.Rdata")
