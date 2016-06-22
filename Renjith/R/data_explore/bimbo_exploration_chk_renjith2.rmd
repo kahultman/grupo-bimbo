@@ -309,7 +309,10 @@ treemap(client.summary[1:100, ],
 
 ```
 
-
+```{r}
+client.summary[1:10,]
+client.summary$cum_units <- cumsum(client.summary$Sales_Units)
+```
 
 
 

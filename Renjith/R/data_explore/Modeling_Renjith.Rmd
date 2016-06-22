@@ -1,0 +1,112 @@
+---
+title: "Modeling_Renjith"
+author: "Renjith Madhavan"
+date: "June 18, 2016"
+output: html_document
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(data.table)
+library(feather)
+library(ggplot2)
+library(treemap)
+library(h2o)
+```
+
+```{r}
+setwd("D:/r/wd/bimbo")
+load("data/rdf/train2.Rdata")
+load("data/rdf/validate.Rdata")
+
+validate$sales_units <- NULL
+validate$sales <- NULL
+validate$returns <- NULL
+validate$returns_units <- NULL
+
+```
+
+# Persistant Baseline Model
+
+This model assumes that the previous week's demand will persist to the following two weeks. If a product or store id is not found in the training data, then the model will predict that the demand will be the overall average demand.
+
+```{r}
+train2_sample
+x2 <- train2_sample %>%
+  group_by(product,client) %>%
+  summarise(avg_demand = mean(demand)) %>%
+  arrange(product)
+x3 <- train2_sample %>%
+  group_by(product) %>%
+  summarise(avg_demand = mean(demand)) %>%
+  arrange(product)
+
+x4 <- train2_sample %>%
+  group_by(client) %>%
+  summarise(avg_demand = mean(demand)) %>%
+  arrange(client)
+x5 <- train2_sample %>%
+    summarise(avg_demand = mean(demand))
+x5
+
+ret_demand <- function(arg1, arg2) {
+  if (train4_sample$arg1 %in% x2$product) {
+    if (train4_sample$arg2 %in% x2$client)
+  }
+}
+ret_demand(train2_sample$client, train2_sample$product)
+train4_sample <- train2_sample[1:7,]
+train4_sample[8:10,] <- train3_sample[1:3,]
+
+train4_sample[,7:11] <- NULL
+train4_sample$key <- NULL
+train4_sample
+eval <- train4_sample$demand
+train4_sample$predict <- ret_demand(train4_sample$client, train4_sample$product)
+
+x <- train4_sample$product %in% x2$product
+x
+x2[x2$product==1120,]
+```
+
+## Evaluation
+
+We are using the Root Mean Squared Logarithmic Error, or RMSLE. 
+
+$$\epsilon = \sqrt{\frac{1}{n} \sum_{i=1}^{n} \big(log(p_i + 1)-log(a_i + 1)\big)^2}$$
+
+Where:
+
+$\epsilon$ is the RMSLE value (score)
+
+$n$ is the total number of observations in the data set,
+
+$p_i$ is the prediction of demand
+
+$a_i$ is the actual demand for $i$
+
+$log(x)$ is the natural logarithm of $x$
+
+
+```{r RMSLE}
+
+sqerror <- (log(validate$prediction + 1) - log(validate$demand + 1))^2
+epsilon <- sqrt(sum(sqerror) / length(sqerror))
+
+epsilon
+  
+
+```
+
+
+# Modeling using h2o using gbm
+```{r}
+#Start an h2o cluster
+h2o.init(nthreads=-1, max_mem_size = '7G')
+
+
+
+```
