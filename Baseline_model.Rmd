@@ -31,10 +31,13 @@ train_last_week <- train2 %>%
   filter(week >= 7) %>% 
   transmute(client, product, prediction = demand)
 
-validate <- left_join(validate, train_last_week, by = c("client", "product"))
-validate$prediction[is.na(validate$prediction)] <- mean(train2$demand)
+train_last_week 
+train_last_week2 <- train_last_week %>% group_by(client, product) %>% summarise(prediction = sum(prediction))
 
-# save(validate, file = "baseline_predictions.Rdata")
+validate <- left_join(validate, train_last_week2, by = c("client", "product"))
+validate$prediction[is.na(validate$prediction)] <- mean(train2$demand)
+validate
+save(validate, file = "baseline_predictions.Rdata")
 
 
 ```
