@@ -67,11 +67,12 @@ Evaluation
 
 ```{r RMSLE}
 
-sqerror <- (log(validate$pred + 1) - log(validate$demand + 1))^2
-epsilon <- sqrt(sum(sqerror) / length(sqerror))
+RMSLE <- function(prediction, actual){
+  sqerror <- (log(prediction + 1) - log(actual + 1))^2
+  epsilon <- sqrt(sum(sqerror) / length(sqerror))
+  return(epsilon)
+}
 
-epsilon
-  
 
 ```
 

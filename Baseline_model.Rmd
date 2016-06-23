@@ -88,7 +88,7 @@ RMSLE <- function(prediction, actual){
   epsilon <- sqrt(sum(sqerror) / length(sqerror))
   return(epsilon)
 }
-
+RMSLE(validate$prediction, validate$demand)
 RMSLE(validate$prediction_round, validate$demand)
 RMSLE(validate$prediction_ceiling, validate$demand)
 ```
