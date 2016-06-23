@@ -27,31 +27,35 @@ validate
 This model assumes that the previous week's demand will persist to the following two weeks. If a product or store id is not found in the training data, then the model will predict that the demand will be the overall average demand.
 
 ```{r}
+# Grab latest week data
 train_last_week <- train2 %>% 
   filter(week >= 7) %>% 
   transmute(client, product, prediction = demand)
 
-train_last_week 
+# For every product/client combo, have one prediction. Sum the predictions for duplicates in training data (these are multiple delivery routes to the same store)
 train_last_week2 <- train_last_week %>% 
   group_by(client, product) %>% 
   summarise(prediction = sum(prediction))
 
+# Identify the number of 'rows' in the validate set for product/client pairs
 validate2 <- validate %>%
   group_by(client, product) %>% 
-  summarise(number = n()) %>%
-  ungroup()
+  summarise(number = n())
 
-
+# This shows the distribution of multiples for each product/client pair
 table(validate2$number)
 
-
-
+# First join will put number of duplicate items in each row of the validate set.
 validate <- left_join(validate, validate2, by = c("client", "product"))
+# Next we'll put the predictions in. 
 validate <- left_join(validate, train_last_week2, by = c("client", "product"))
+# Divide the predicted value by the number of instances for each client/product
 validate$prediction <- validate$prediction / validate$number
-validate$prediction[is.na(validate$prediction)] <- mean(train2$demand)
+# Where there isn't a prediction, make it the overall median demand
+validate$prediction[is.na(validate$prediction)] <- median(train2$demand)
 validate
 save(validate, file = "baseline_predictions.Rdata")
+
 
 
 ```
