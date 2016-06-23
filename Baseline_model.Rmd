@@ -53,7 +53,9 @@ validate <- left_join(validate, train_last_week2, by = c("client", "product"))
 validate$prediction <- validate$prediction / validate$number
 # Where there isn't a prediction, make it the overall median demand
 validate$prediction[is.na(validate$prediction)] <- median(train2$demand)
-validate
+validate$prediction_round <- round(validate$prediction, 0)
+validate$prediction_ceiling <- ceiling(validate$prediction)
+
 save(validate, file = "baseline_predictions.Rdata")
 
 
@@ -81,11 +83,13 @@ $log(x)$ is the natural logarithm of $x$
 
 ```{r RMSLE}
 
-sqerror <- (log(validate$prediction + 1) - log(validate$demand + 1))^2
-epsilon <- sqrt(sum(sqerror) / length(sqerror))
+RMSLE <- function(prediction, actual){
+  sqerror <- (log(prediction + 1) - log(actual + 1))^2
+  epsilon <- sqrt(sum(sqerror) / length(sqerror))
+  return(epsilon)
+}
 
-epsilon
-  
-
+RMSLE(validate$prediction_round, validate$demand)
+RMSLE(validate$prediction_ceiling, validate$demand)
 ```
 
