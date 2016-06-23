@@ -35,14 +35,15 @@ example_complete <- example %>%
 
 example_complete
 example.ts <- ts(example_complete$demand, start = 3, end = 7, frequency = 1)
-example.ts
-
+example.ts <- ts(c(100, 200, 300, 400, 500), start = 3, end = 7, frequency = 1)
+?ts
 ?arima
 
-example.arima <- arima(example.ts)
+example.arima <- arima(example.ts, order = c(3,0,0))
 example.arima
 
 example.predict <- predict(example.arima, n.ahead=2)
+example.predict
 example.predict$pred
 ts.plot(example.ts, example.predict$pred, lty=1:2)
 ```
