@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 ```
 
-```{r}
+```{r try on one sample}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
 load("train2.Rdata")
 
