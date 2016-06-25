@@ -1,0 +1,80 @@
+---
+title: "Time Series"
+author: "Renjith Madhavan"
+date: "June 22, 2016"
+output: html_document
+---
+
+---
+title: "Modeling_Renjith"
+author: "Renjith Madhavan"
+date: "June 18, 2016"
+output: html_document
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(data.table)
+library(feather)
+library(ggplot2)
+library(treemap)
+library(h2o)
+```
+
+```{r}
+setwd("D:/r/wd/bimbo")
+load("data/rdf/train2.Rdata")
+load("data/rdf/validate.Rdata")
+
+# validate$sales_units <- NULL
+# validate$sales <- NULL
+# validate$returns <- NULL
+# validate$returns_units <- NULL
+
+new_products <- validate %>%
+  filter(!paste0(validate$product, validate$client) %in% paste0(train2$product, train2$client) )
+new_products[1:10,]
+
+train2[1:10,]
+
+#lm_train2 <- lm(demand ~ week + client + product, data = train2)
+
+train_last_week <- train2 %>% 
+  filter(week >= 7) %>% 
+  transmute(client, product, demand)
+
+train_last_week[1:10,]
+train_last_week$product <- as.integer(train_last_week$product)
+train_last_week$client <- as.integer(train_last_week$client) # added for muti variate linear model
+lm_train2 <- lm(demand ~ product, data = train_last_week)
+summary(lm_train2)
+validate[1:10,]
+validate.demand <- validate$demand
+
+validate$demand <- NULL
+validate$product <- as.integer(validate$product)
+validate.predict <- predict(lm_train2, validate)
+
+validate.predict[1:10]
+
+sqerror <- (log(validate.predict + 1) - log(validate.demand + 1))^2
+epsilon <- sqrt(sum(sqerror) / length(sqerror))
+epsilon
+
+# multivariate linear model
+
+lm_train2 <- lm(demand ~ product, data = train_last_week)
+
+
+## trying product and client
+lm_train3 <- lm(demand ~ client + product, data = train_last_week)
+summary(lm_train3)
+validate$client <- as.integer(validate$client)
+validate2.predict <- predict(lm_train3, validate)
+sqerror <- (log(validate2.predict + 1) - log(validate.demand + 1))^2
+epsilon <- sqrt(sum(sqerror) / length(sqerror))
+epsilon
+```
