@@ -59,7 +59,8 @@ validate$product <- as.integer(validate$product)
 validate.predict <- predict(lm_train2, validate)
 
 validate.predict[1:10]
-
+sum(validate.predict[validate.predict < 5 ])
+hist(validate.predict)
 sqerror <- (log(validate.predict + 1) - log(validate.demand + 1))^2
 epsilon <- sqrt(sum(sqerror) / length(sqerror))
 epsilon

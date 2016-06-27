@@ -1,0 +1,123 @@
+---
+title: "Modeling_GBM_Renjith"
+author: "Renjith Madhavan"
+date: "June 25, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("gbm")
+library(gbm)
+library(dplyr)
+```
+
+
+```{r}
+
+setwd("D:/r/wd/bimbo")
+load("data/rdf/train2.Rdata")
+load("data/rdf/validate.Rdata")
+train2[1:10,]
+train3 <- train2
+rm(train2)
+
+str(train3[1:10,])
+train3$depot <- as.integer(train3$depot)
+train3$channel <- as.integer(train3$channel)
+train3$route <- as.integer(train3$route)
+train3$client <- as.integer(train3$client)
+train3$product <- as.integer(train3$product)
+
+train4 <- sample_n(train3, 500000 )
+rm(train3)
+
+fit <- gbm(log(demand+1.1) ~ log(week+1.1) + log(depot+1.1)+log(channel+1.1)+log(route+1.1)+log(client+1.1)+log(product+1.1),distribution="gaussian",data=train4,n.trees=5,shrinkage=0.1,interaction.depth=4,bag.fraction=0.5,train.fraction=1,cv.folds=3,keep.data=TRUE,verbose=TRUE,n.cores=2)
+
+best.iter <- gbm.perf(fit, method="cv")
+
+validate[1:10,]
+
+validate$depot <- as.integer(validate$depot)
+validate$channel <- as.integer(validate$channel)
+validate$route <- as.integer(validate$route)
+validate$client <- as.integer(validate$client)
+validate$product <- as.integer(validate$product)
+
+prediction.actual <- validate$demand
+validate$demand <- NULL
+
+
+prediction <- predict(fit, newdata = validate, type="response",n.trees=best.iter)
+
+prediction[prediction < 0]
+prediction=exp(prediction)-1.1
+sqerror <- (log(prediction + 1) - log(prediction.actual + 1))^2
+epsilon <- sqrt(sum(sqerror) / length(sqerror))
+epsilon
+
+rm(list = ls() )
+
+```
+
+
+# Train and test on actual train and test data
+
+
+```{r}
+
+setwd("D:/r/wd/bimbo")
+load("data/rdf/train.Rdata")
+load("data/rdf/test.Rdata")
+
+train3 <- train
+rm(train)
+validate <- test
+rm(test)
+
+str(train3[1:10,])
+train3$depot <- as.integer(train3$depot)
+train3$channel <- as.integer(train3$channel)
+train3$route <- as.integer(train3$route)
+train3$client <- as.integer(train3$client)
+train3$product <- as.integer(train3$product)
+
+train4 <- sample_n(train3, 500000 )
+rm(train3)
+
+fit <- gbm(log(demand+1.1) ~ log(week+1.1) + log(depot+1.1)+log(channel+1.1)+log(route+1.1)+log(client+1.1)+log(product+1.1),distribution="gaussian",data=train4,n.trees=5,shrinkage=0.1,interaction.depth=4,bag.fraction=0.5,train.fraction=1,cv.folds=3,keep.data=TRUE,verbose=TRUE,n.cores=2)
+
+best.iter <- gbm.perf(fit, method="cv")
+
+validate[1:10,]
+
+validate$depot <- as.integer(validate$depot)
+validate$channel <- as.integer(validate$channel)
+validate$route <- as.integer(validate$route)
+validate$client <- as.integer(validate$client)
+validate$product <- as.integer(validate$product)
+
+# prediction.actual <- validate$demand
+# validate$demand <- NULL
+
+
+prediction <- predict(fit, newdata = validate, type="response",n.trees=best.iter)
+
+prediction[prediction < 0]=0.1
+prediction=exp(prediction)-1.1
+
+
+
+
+
+submission1 <- data.frame(id=validate$id, Demanda_uni_equil=as.integer(round(prediction)))
+
+submission1[1:10,]
+write.csv(submission1, "data/submission1.csv", row.names = F)
+
+load("data/rdf/train.Rdata")
+train[1:10,]
+train %>% filter(  client==15766, product==1238)
+
+```
+
