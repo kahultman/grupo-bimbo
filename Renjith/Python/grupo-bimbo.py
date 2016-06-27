@@ -1,7 +1,8 @@
 import numpy as np
 
 print ('Preparing Arrays...')
-f = open('D:/r/wd/bimbo/data/source/train.csv', "r")
+#f = open('D:/r/wd/bimbo/data/source/train.csv', "r")
+f = open('C:/renjith/datascience/git/data/grupobimbo/train.csv', "r")
 f.readline()
 latest_demand_clpro = dict()
 global_median = list()
@@ -32,7 +33,8 @@ f.close()
 print('')
 path = ('submission3.csv')
 out = open(path, "w")
-f = open('D:/r/wd/bimbo/data/source/test.csv', "r")
+#f = open('D:/r/wd/bimbo/data/source/test.csv', "r")
+f = open('C:/renjith/datascience/git/data/grupobimbo/test.csv', "r")
 f.readline()
 out.write("id,Demanda_uni_equil\n")
 median_demand = np.median(global_median) 
@@ -68,3 +70,8 @@ print ('Total 1: {} ...'.format(total1))
 print ('Total 2: {} ...'.format(total2))
 print ('')
 print ('Completed!')
+
+
+
+
+
