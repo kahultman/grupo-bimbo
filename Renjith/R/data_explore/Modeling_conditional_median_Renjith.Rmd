@@ -7,7 +7,69 @@ output: html_document
 
 
 ```{r}
+library(data.table)
+library(dplyr)
+setwd("C:/r/wd/bimbo")
+head(train)
+sapply(train,class)
+colClasses(train)
+train$client <- as.numeric(train$client)
+train$product <- as.numeric(train$product)
+train$demand <- as.numeric(train$demand)
+setkey(train, product, client)
+median <- train[, median(demand)]
+median
 
 
+median_Prod <- train[, median(demand), by = product]
+setnames(median_Prod,"V1","M2")
 
+median_Client_Prod <- train[, median(demand),by = .(product, client)]
+setnames(median_Client_Prod,"V1","M3")
+
+median_Client_Prod_Depot <- train[, median(demand),by = .(product, client, depot)]
+setnames(median_Client_Prod_Depot,"V1","M4")
+
+test$client <- as.numeric(test$client)
+test$product <- as.numeric(test$product)
+
+head(test)
+sapply(test, class)
+
+head(median_Client_Prod)
+head(median_Client_Prod_Depot)
+
+
+submit <- left_join(test, median_Client_Prod_Depot, by = c("client", "depot", "product"))
+submit$M3 <- left_join(test, median_Client_Prod , by = c("client", "product"))$M3
+is.na(submit$M4) <- submit$M3
+sum(is.na(submit$M2))
+
+
+submit$M3 <-  NULL
+submit$M2 <-  NULL
+submit$M2 <- left_join(test, median_Prod , by = "product")$M2
+head(submit)
+
+
+submit <- merge(test, median_Client_Prod_Depot, all.x = TRUE)
+submit$M3 <- merge(test, median_Client_Prod, all.x = TRUE)
+submit$M2 <- merge(test, median_Prod, by = "product", all.x = TRUE)$M2
+
+head(submit)
+
+submit$Pred <- submit$M3
+
+submit[is.na(M3)]$Pred <- submit[is.na(M3)]$M2
+
+submit[is.na(Pred)]$Pred <- median
+
+setnames(submit,"Pred","Demanda_uni_equil")
+
+head(submit)
+write.csv(submit[,.(id,Demanda_uni_equil)],"submission.csv", row.names = FALSE)
+
+rm(submit)
+rm(train)
+rm(submit)
 ```
