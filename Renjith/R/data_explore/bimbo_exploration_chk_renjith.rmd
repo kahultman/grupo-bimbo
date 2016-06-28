@@ -20,10 +20,12 @@ library(dplyr)
 The first step in doing the analysis would be to load the data into R. For this I am using data.table package from CRAN. 
 
 ```{r}
-setwd("D:/r/wd/bimbo")
-train <- fread("data/source/train.csv", header = TRUE)
+setwd("C:/r/wd/bimbo")
+#train <- fread("data/source/train.csv", header = TRUE)
+train <- fread("C:/renjith/datascience/git/data/grupobimbo/train.csv", header = TRUE)
 train <- tbl_df(train)
-test <- fread("data/source/test.csv", header = TRUE)
+#test <- fread("data/source/test.csv", header = TRUE)
+test <- fread("C:/renjith/datascience/git/data/grupobimbo/test.csv", header = TRUE)
 test <- tbl_df(test)
 clients <- tbl_df(read.csv("data/source/cliente_tabla.csv"))
 products <- tbl_df(read.csv("data/source/producto_tabla.csv"))
