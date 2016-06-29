@@ -43,6 +43,19 @@ head(median_Client_Prod_Depot)
 median_Client_Prod[median_Client_Prod$product == 34210 & median_Client_Prod$client == 26  ]
 
 
+submit <- left_join(test, median_Client_Prod_Depot, by = c("client", "depot", "product"))
+
+head(submit2)
+submit2 <- left_join(test, median_Client_Prod , by = c("client", "product"))
+
+head(left_join(test, median_Client_Prod_Depot, by = c("client", "depot", "product")) %>%
+  arrange(id))
+head(left_join(test, median_Client_Prod , by = c("client", "product")) %>%
+  arrange(id))
+
+
+
+
 submit <- left_join(test, median_Client_Prod_Depot, by = c("client", "depot", "product")) %>%
   arrange(id)
   
@@ -54,38 +67,37 @@ submit$M2 <- (left_join(test, median_Prod , by = "product") %>%
 
 submit$M1 <- median
 
-submit$demand <- submit$M4
-submit$demand[is.na(submit$demand)] <- submit$M3[is.na(submit$demand)]
-sum(is.na(submit$demand))
-submit$demand[is.na(submit$demand)] <- submit$M2[is.na(submit$demand)]
-submit$demand[is.na(submit$demand)] <- submit$M1[is.na(submit$demand)]
-sum(is.na(submit$demand))
+head(submit)
 
+t1 <- sqldf("Select * from submit limit 10")
+t1
+sqldf("select * from t1 where M4=NA")
+
+
+submit$M3 <-  NULL
+submit$M2 <-  NULL
+submit$M2 <- left_join(test, median_Prod , by = "product")$M2
+
+
+
+submit <- merge(test, median_Client_Prod_Depot, all.x = TRUE)
+submit$M3 <- merge(test, median_Client_Prod, all.x = TRUE)
+submit$M2 <- merge(test, median_Prod, by = "product", all.x = TRUE)$M2
 
 head(submit)
 
-setnames(submit,"demand","Demanda_uni_equil")
-write.csv(submit[,.(id,Demanda_uni_equil)],"data/submission/submission1.csv", row.names = FALSE)
+submit$Pred <- submit$M3
 
+submit[is.na(M3)]$Pred <- submit[is.na(M3)]$M2
 
-head(products)
-library(stringr)
-brand_list <- function(x) {
-  tokens <- strsplit(as.character(x), " ")[[1]]
-  tokens[length(tokens) - 1]
-}
+submit[is.na(Pred)]$Pred <- median
 
-brands <- data.frame(brandname=unlist(lapply(as.character(products$product_name), brand_list)))
+setnames(submit,"Pred","Demanda_uni_equil")
 
-head(brands)
+head(submit)
+write.csv(submit[,.(id,Demanda_uni_equil)],"submission.csv", row.names = FALSE)
 
-sqldf("select distinct brandname from brands order by 1")
-
-products[grep("TR", products$product_name),]
-
-
-
-
-
-
+rm(submit)
+rm(train)
+rm(submit)
 ```
