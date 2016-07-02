@@ -1,0 +1,162 @@
+---
+title: "Feature Engineering with Brand Name"
+author: "Renjith Madhavan"
+date: "July 1, 2016"
+output: html_document
+---
+
+```{r}
+library(data.table)
+library(dplyr)
+#install.packages("sqldf")
+library(sqldf)
+setwd("d:/r/wd/bimbo")
+head(train)
+sapply(train,class)
+colClasses(train)
+train$client <- as.numeric(train$client)
+train$product <- as.numeric(train$product)
+train$demand <- as.numeric(train$demand)
+setkey(train, product, client)
+median <- train[, median(demand)]
+
+
+
+median_Prod <- train[, median(demand), by = product]
+setnames(median_Prod,"V1","M2")
+
+median_Client_Prod <- train[, median(demand),by = .(product, client)]
+setnames(median_Client_Prod,"V1","M3")
+
+median_Client_Prod_Depot <- train[, median(demand),by = .(product, client, depot)]
+setnames(median_Client_Prod_Depot,"V1","M4")
+
+test$client <- as.numeric(test$client)
+test$product <- as.numeric(test$product)
+
+head(test)
+sapply(test, class)
+
+head(median_Client_Prod)
+head(median_Client_Prod_Depot)
+median_Client_Prod[median_Client_Prod$product == 34210 & median_Client_Prod$client == 26  ]
+
+
+submit <- left_join(test, median_Client_Prod_Depot, by = c("client", "depot", "product")) %>%
+  arrange(id)
+  
+submit$M3 <- (left_join(test, median_Client_Prod , by = c("client", "product")) %>%
+  arrange(id))$M3
+
+submit$M2 <- (left_join(test, median_Prod , by = "product") %>%
+  arrange(id))$M2
+
+submit$M1 <- median
+
+submit$demand <- submit$M4
+submit$demand[is.na(submit$demand)] <- submit$M3[is.na(submit$demand)]
+sum(is.na(submit$demand))
+submit$demand[is.na(submit$demand)] <- submit$M2[is.na(submit$demand)]
+submit$demand[is.na(submit$demand)] <- submit$M1[is.na(submit$demand)]
+sum(is.na(submit$demand))
+
+
+head(submit)
+
+setnames(submit,"demand","Demanda_uni_equil")
+write.csv(submit[,.(id,Demanda_uni_equil)],"data/submission/submission07012016_1.csv", row.names = FALSE)
+
+
+head(products)
+library(stringr)
+brand_list <- function(x) {
+  tokens <- strsplit(as.character(x), " ")[[1]]
+  tokens[length(tokens) - 1]
+}
+
+brands <- data.frame(brandname=unlist(lapply(as.character(products$product_name), brand_list)))
+
+head(brands)
+
+sqldf("select distinct brandname from brands order by 1")
+
+products[grep("TR", products$product_name),]
+setwd("D:/r/wd/bimbo")
+save(median_Client_Prod, file="data/rdf/forconditional_median/median_Client_Prod.Rdata")
+save(median_Client_Prod_Depot, file="data/rdf/forconditional_median/median_Client_Prod_Depot")
+
+
+head(products)
+products$brandname <- brands$brandname
+
+products$product_name <- NULL
+
+
+head(median_Prod)
+products <- as.data.table(products)
+
+brand_demand <- left_join(median_Prod, products, by="product") %>%
+  arrange(product)
+
+head(brand_demand)
+
+setnames(brand_demand, "M2", "M5")
+
+brand_demand$product <- NULL
+
+load("data/rdf/forconditional_median/median_Client_Prod.Rdata")
+
+load("data/rdf/forconditional_median/median_Client_Prod_Depot")
+
+
+# need to add a brand field to the test
+test$brandname <- (test %>%
+  left_join(products, by = "product") %>%
+  arrange(id))$brandname
+
+rm(test1)
+
+head(test)
+
+
+submit <- left_join(test, median_Client_Prod_Depot, by = c("client", "depot", "product")) %>%
+  arrange(id)
+  
+submit$M3 <- (left_join(test, median_Client_Prod , by = c("client", "product")) %>%
+  arrange(id))$M3
+
+submit$M2 <- (left_join(test, median_Prod , by = "product") %>%
+  arrange(id))$M2
+
+
+
+# delete duplicates and summarize
+
+brand_demand <- brand_demand %>%
+  group_by(brandname) %>%
+  summarise(M5 = median(M5))
+
+
+submit$M5 <- (left_join(test, brand_demand , by = "brandname") %>%
+  arrange(id))$M5
+
+submit$M1 <- median
+
+submit$demand <- submit$M4
+sum(is.na(submit$demand))
+submit$demand[is.na(submit$demand)] <- submit$M3[is.na(submit$demand)]
+sum(is.na(submit$demand))
+submit$demand[is.na(submit$demand)] <- submit$M2[is.na(submit$demand)]
+sum(is.na(submit$demand))
+submit$demand[is.na(submit$demand)] <- submit$M5[is.na(submit$demand)]
+sum(is.na(submit$demand))
+submit$demand[is.na(submit$demand)] <- submit$M1[is.na(submit$demand)]
+sum(is.na(submit$demand))
+
+head(submit)
+
+setnames(submit,"demand","Demanda_uni_equil")
+write.csv(submit[,.(id,Demanda_uni_equil)],"data/submission/submission07012016_2.csv", row.names = FALSE)
+
+
+```

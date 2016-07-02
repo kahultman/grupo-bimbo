@@ -20,7 +20,7 @@ train$product <- as.numeric(train$product)
 train$demand <- as.numeric(train$demand)
 setkey(train, product, client)
 median <- train[, median(demand)]
-median
+
 
 
 median_Prod <- train[, median(demand), by = product]
@@ -65,24 +65,7 @@ sum(is.na(submit$demand))
 head(submit)
 
 setnames(submit,"demand","Demanda_uni_equil")
-write.csv(submit[,.(id,Demanda_uni_equil)],"data/submission/submission1.csv", row.names = FALSE)
-
-
-head(products)
-library(stringr)
-brand_list <- function(x) {
-  tokens <- strsplit(as.character(x), " ")[[1]]
-  tokens[length(tokens) - 1]
-}
-
-brands <- data.frame(brandname=unlist(lapply(as.character(products$product_name), brand_list)))
-
-head(brands)
-
-sqldf("select distinct brandname from brands order by 1")
-
-products[grep("TR", products$product_name),]
-
+write.csv(submit[,.(id,Demanda_uni_equil)],"data/submission/submission07012016_1.csv", row.names = FALSE)
 
 
 
