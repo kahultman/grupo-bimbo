@@ -44,8 +44,15 @@ product_client <- train2 %>%
   group_by(product, client) %>%
   summarise(p_c_d = median(demand))
 
-save(product_client, file = "product_client.RData")
+product_client
 
+product_client_depot <- train2 %>%
+  group_by(product, client, depot) %>%
+  summarise(p_c_d_d = median(demand))
+
+save(product_client, file = "product_client.RData")
+load("product_client.RData")
+product_client
 validate
 
 validate <- left_join(validate, product_client, by = c("product", "client"))
@@ -53,11 +60,14 @@ validate <- left_join(validate, product_client, by = c("product", "client"))
 validate <- left_join(validate, product, by = "product")
 
 validate$pred <- validate$p_c_d
+
 validate$pred[is.na(validate$pred)] <- validate$p_d[is.na(validate$pred)]
-sum(is.na(validate$pred))
+
+#sum(is.na(validate$p_c_d))
+#head(validate[is.na(validate$p_c_d),])
 #looks like there are no NA's left
 # if there were, the following would put the overall median in
-# validate$pred[is.na(validate$pred)] <- overall
+validate$pred[is.na(validate$pred)] <- overall
 
 
 ```

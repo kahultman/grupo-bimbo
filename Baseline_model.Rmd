@@ -58,8 +58,8 @@ validate$prediction_ceiling <- ceiling(validate$prediction)
 
 save(validate, file = "baseline_predictions.Rdata")
 
-
-
+load("baseline_predictions.Rdata")
+validate
 ```
 
 ## Evaluation
