@@ -8,12 +8,29 @@ library(ggplot2)
 
 load("train2.Rda")
 load("validate.Rda")
-load("products.Rda")
+load("products2.Rda")
+
+#Create brands variable in products dataset
+brand_list <- function(x) {
+  tokens <- strsplit(as.character(x), " ")[[1]]
+  tokens[length(tokens) - 1]
+}
+#Create new products dataset that combines brand on
+brands <- data.frame(brandname=unlist(lapply(as.character(products$product_name), brand_list)))
+product2 <- cbind(products, brands)
+
 
 #Subset training2 data to 1,000 (presorted)
 train2_samp <- train2 %>% 
   arrange(product, week, client, depot) %>%
   slice(1:100000)
+
+#Add brand variable to sample data
+train2_samp <- left_join(train2_samp, products2, by="product") %>%
+  mutate(returns_bin=ifelse(returns_units>0,1,0)) %>%
+  mutate(demand_bin=ifelse(demand>0,1,0)) %>%
+  mutate(known_demand=ifelse(returns_units>0, demand, NA))
+
 
 #Prep data to make Excplicit zeros with dummy variable to match later
 #Determine what's the earliest week for each product by client and depot
