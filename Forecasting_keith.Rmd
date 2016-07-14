@@ -11,7 +11,7 @@ library(dplyr)
 library(tidyr)
 ```
 
-```{r try on one sample}
+```{r Examine one sample of time series}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
 load("train2.Rdata")
 
@@ -28,7 +28,9 @@ example.ts <- ts(example$demand, start = 3, end = 7, frequency = 1)
 example.ts
 # if we don't fill in that missing data, then the time series will start over from the first observation
 
-week5 <- data.frame(week=5, depot="1355", channel="2", route="1606", client="48572", product="5710", sales_units= 0, sales= 0, returns_units= 0, returns= 0, demand=NA)
+
+
+week5 <- data.frame(week=5, depot="1355", channel="2", route="1606", client="48572", product="5710", sales_units= 0, sales= 0, returns_units= 0, returns= 0, demand=0)
 
 example_complete <- example %>%
   bind_rows(week5) %>%
@@ -54,52 +56,48 @@ Create time series for each product and client.
 ```{r}
 load("products.Rdata")
 load("clients.Rdata")
-product_client <- 
-
+  
+# Test with a sample - switch to numeric for filter 
 train2$product <- as.numeric(train2$product)
 train2$client <- as.numeric(train2$client)
-  
 product_client_sample <- train2 %>%
   filter(product < 300, client < 1000)
 
+# Group data by product/client/week and then take the median for those values (includes multiple depots)
 product_client_sample <- product_client_sample %>%
   group_by(product, client, week) %>%
   summarise(p_c_w = median(demand))
-
 product_client_sample
 
+# Spread out the data to columns (shows all weeks of data, missing is NA)
 product_client_sample2 <- spread(product_client_sample, week, p_c_w)
-product_client_sample2
 
-z <- ts(matrix(rnorm(300), 100, 3), start = c(1961, 1), frequency = 12)
-class(z)
-head(z)
-plot(z)
+# Set NAs to a constant (tried 0, and 1)
+product_client_sample2[is.na(product_client_sample2)] <- 1
 
+# Put back into rows
+product_client_sample2 <- gather(product_client_sample2, "week", "demand", 3:7)
 
-product_client_sample2.ts <- ts(product_client_sample2[,3:7], start = 3, frequency = 1)
-head(product_client_sample2.ts)
-str(product_client_sample2.ts)
-
-product_client_matrix <- as.matrix(product_client_sample2[,3:7])
-
-product_client_matrix
-
-product_client_sample2$median <- rowMedians(product_client_matrix, na.rm=TRUE)
-
-product_client_sample2$median <- na.exclude(product_client_sample2$w3 + product_client_sample2$w4 +
-                                    product_client_sample2$w5 + product_client_sample2$w6 +
-                                    product_client_sample2$w7) / 5
-
-colnames(product_client_sample2) <- c("product", "client", "w3", "w4", "w5", "w6", "w7")
-
-
-product_client_sample2 <- product_client_sample2 %>%
+# Create column of time series
+product_client_sample2.ts <- product_client_sample2 %>% 
   group_by(product, client) %>%
-  do(tseries = ts()
-    
-  )
+  arrange(week) %>%
+  do(timeseries = ts(.$demand, start = 3, end = 7, frequency = 1)) 
 
+product_client_sample2.ts
+unlist(product_client_sample2.ts$timeseries[5])
+
+# Now I have a time series object for each client/product combination. 
+
+# Below is where I am having trouble
+
+product_client_sample2.ts$arima1 <- lapply(product_client_sample2.ts$timeseries, FUN =
+                                             arima, order = c(3,0,0))
+
+
+
+product_client_sample2.ts <- product_client_sample2.ts%>%
+  do(arima1 = arima(.$timeseries, order = c(1,0,0)))
 
 ```
 
