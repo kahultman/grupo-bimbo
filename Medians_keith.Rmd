@@ -18,7 +18,6 @@ validate$sales_units <- NULL
 validate$sales <- NULL
 validate$returns <- NULL
 validate$returns_units <- NULL
-validate$depot<- NULL
 validate$channel <- NULL
 validate$route <- NULL
 ```
@@ -46,28 +45,36 @@ product_client <- train2 %>%
 
 product_client
 
+# Product/Client/Depot median demand
 product_client_depot <- train2 %>%
   group_by(product, client, depot) %>%
   summarise(p_c_d_d = median(demand))
 
-save(product_client, file = "product_client.RData")
+save(product_client, "product_client.Rdata")
+save(product_client_depot, "product_client_depot.Rdata")
 load("product_client.RData")
 product_client
 validate
 
-validate <- left_join(validate, product_client, by = c("product", "client"))
+medians <- left_join(validate, product_client_depot, by = c("product", "client", "depot"))
 
-validate <- left_join(validate, product, by = "product")
+medians <- left_join(medians, product_client, by = c("product", "client"))
 
-validate$pred <- validate$p_c_d
+medians <- left_join(medians, product, by = "product")
 
-validate$pred[is.na(validate$pred)] <- validate$p_d[is.na(validate$pred)]
 
-#sum(is.na(validate$p_c_d))
-#head(validate[is.na(validate$p_c_d),])
-#looks like there are no NA's left
-# if there were, the following would put the overall median in
-validate$pred[is.na(validate$pred)] <- overall
+medians$pred <- medians$p_c_d
+medians$pred[is.na(medians$pred)] <- medians$p_d[is.na(medians$pred)]
+medians$pred[is.na(medians$pred)] <- overall
+medians$pred <- round(medians$pred, 0)
+
+# With Depot specificity
+medians$pred2 <- medians$p_c_d_d
+medians$pred2[is.na(medians$pred2)] <- medians$p_c_d[is.na(medians$pred2)]
+medians$pred2[is.na(medians$pred2)] <- medians$p_d[is.na(medians$pred2)]
+medians$pred2[is.na(medians$pred2)] <- overall
+medians$pred2 <- round(medians$pred2, 0)
+
 
 
 ```
@@ -84,5 +91,10 @@ RMSLE <- function(prediction, actual){
 }
 
 
+```
+
+```{r}
+RMSLE(medians$pred, medians$demand)
+RMSLE(medians$pred2, medians$demand)
 ```
 
