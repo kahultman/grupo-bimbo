@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(tidyr)
+library(zoo)
 ```
 
 ```{r Examine one sample of time series}
@@ -38,7 +39,7 @@ example_complete <- example %>%
 
 example_complete
 example.ts <- ts(example_complete$demand, start = 3, end = 7, frequency = 1)
-example.ts <- ts(c(100, 200, 300, 400, 500), start = 3, end = 7, frequency = 1)
+#example.ts <- ts(c(100, 200, 300, 400, 500), start = 3, end = 7, frequency = 1)
 ?ts
 ?arima
 
@@ -77,7 +78,22 @@ product_client_sample2[is.na(product_client_sample2)] <- 1
 
 # Put back into rows
 product_client_sample2 <- gather(product_client_sample2, "week", "demand", 3:7)
+```
 
+Linear model for each product/client
+
+```{r}
+product_client_sample2 <- product_client_sample2 %>% 
+  group_by(product, client) %>%
+  do(linearmodel = lm(demand ~ week, data = .))
+
+summary(product_client_sample2$linearmodel[2])
+
+```
+
+
+Time Series and Arima
+```{r}
 # Create column of time series
 product_client_sample2.ts <- product_client_sample2 %>% 
   group_by(product, client) %>%
@@ -96,7 +112,7 @@ product_client_sample2.ts$arima1 <- lapply(product_client_sample2.ts$timeseries,
 
 
 
-product_client_sample2.ts <- product_client_sample2.ts%>%
+product_client_sample2.ts <- product_client_sample2.ts %>%
   do(arima1 = arima(.$timeseries, order = c(1,0,0)))
 
 ```

@@ -14,6 +14,14 @@ setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
 load("train2.Rdata")
 load("validate.Rdata")
 
+# To run on full train/test set
+#load("train1.Rdata")
+# load("test.Rdata")
+#train2 <- train1
+#validate <- test
+
+
+
 validate$sales_units <- NULL
 validate$sales <- NULL
 validate$returns <- NULL
@@ -50,8 +58,8 @@ product_client_depot <- train2 %>%
   group_by(product, client, depot) %>%
   summarise(p_c_d_d = median(demand))
 
-save(product_client, "product_client.Rdata")
-save(product_client_depot, "product_client_depot.Rdata")
+save(product_client, file = "product_client.Rdata")
+save(product_client_depot, file = "product_client_depot.Rdata")
 load("product_client.RData")
 product_client
 validate
@@ -75,7 +83,13 @@ medians$pred2[is.na(medians$pred2)] <- medians$p_d[is.na(medians$pred2)]
 medians$pred2[is.na(medians$pred2)] <- overall
 medians$pred2 <- round(medians$pred2, 0)
 
-
+test_medians_pc <- medians %>% select(id, pred) %>% arrange(id)
+colnames(test_medians_pc) <- c("id", "Demanda_uni_equil")
+write.csv(test_medians_pc, file = "test_medians_pc.csv", row.names = FALSE)
+test_medians_pcd <- medians %>% select(id, pred2) %>% arrange(id)
+colnames(test_medians_pcd) <- c("id", "Demanda_uni_equil")
+write.csv(test_medians_pcd, file = "test_medians_pcd.csv", row.names = FALSE)
+save(medians, file = "medians.Rdata")
 
 ```
 
@@ -97,4 +111,5 @@ RMSLE <- function(prediction, actual){
 RMSLE(medians$pred, medians$demand)
 RMSLE(medians$pred2, medians$demand)
 ```
+
 
