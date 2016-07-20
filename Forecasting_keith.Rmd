@@ -61,58 +61,69 @@ load("clients.Rdata")
 # Test with a sample - switch to numeric for filter 
 train2$product <- as.numeric(train2$product)
 train2$client <- as.numeric(train2$client)
-product_client_sample <- train2 %>%
+pcs <- train2 %>%
   filter(product < 300, client < 1000)
 
 # Group data by product/client/week and then take the median for those values (includes multiple depots)
-product_client_sample <- product_client_sample %>%
+pcs1 <- pcs %>%
   group_by(product, client, week) %>%
-  summarise(p_c_w = median(demand))
-product_client_sample
+  summarise(p_c_w = median(demand)) %>% 
+  mutate(p_c = median(p_c_w))
+  
+
+
 
 # Spread out the data to columns (shows all weeks of data, missing is NA)
-product_client_sample2 <- spread(product_client_sample, week, p_c_w)
-
-# Set NAs to a constant (tried 0, and 1)
-product_client_sample2[is.na(product_client_sample2)] <- 1
+pcs2 <- spread(pcs1, week, p_c_w)
 
 # Put back into rows
-product_client_sample2 <- gather(product_client_sample2, "week", "demand", 3:7)
+pcs2 <- gather(pcs2, "week", "demand", 4:8)
+
+# Set NAs to a constant (tried 0, and 1)
+pcs2$demand[is.na(pcs2$demand)] <- pcs2$p_c
+
+
+
+
 ```
 
 Linear model for each product/client
 
-```{r}
-product_client_sample2 <- product_client_sample2 %>% 
+```{r linear model, echo=TRUE}
+pcs2 <- pcs %>% 
   group_by(product, client) %>%
   do(linearmodel = lm(demand ~ week, data = .))
 
-summary(product_client_sample2$linearmodel[2])
+(pcs2$linearmodel[2])
 
+library(broom)
+
+models <- pcs2 %>% tidy(linearmodel)
+models
 ```
 
 
 Time Series and Arima
 ```{r}
 # Create column of time series
-product_client_sample2.ts <- product_client_sample2 %>% 
+pcs2.ts <- pcs2 %>% 
   group_by(product, client) %>%
   arrange(week) %>%
   do(timeseries = ts(.$demand, start = 3, end = 7, frequency = 1)) 
 
-product_client_sample2.ts
-unlist(product_client_sample2.ts$timeseries[5])
+pcs2.ts
+unlist(pcs2.ts$timeseries[5])
 
 # Now I have a time series object for each client/product combination. 
 
 # Below is where I am having trouble
 
-product_client_sample2.ts$arima1 <- lapply(product_client_sample2.ts$timeseries, FUN =
+pcs2.ts$arima1 <- lapply(pcs2.ts$timeseries, FUN =
                                              arima, order = c(3,0,0))
 
 
 
-product_client_sample2.ts <- product_client_sample2.ts %>%
+pcs2.ts <- pcs2.ts %>%
   do(arima1 = arima(.$timeseries, order = c(1,0,0)))
 
 ```
