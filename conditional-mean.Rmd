@@ -9,10 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(broom)
-```
 
-
-```{r}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
 load("train1.Rdata")
 load("test.Rdata")
@@ -75,6 +72,7 @@ test <- left_join(test, product_route, by = c("product", "route"))
 test <- left_join(test, product, by = "product")
 ```
 
+Create predictions
 
 ```{r}
 test$pred <- lm1$estimate[2]*test$p_c_d_d + lm1$estimate[3]*test$p_r_d + lm1$estimate[1]
@@ -87,12 +85,19 @@ test$pred <- expm1(test$pred)
 test$pred <- round(test$pred, 3)
 ```
 
+Create submission file
+
 ```{r}
 submit_cond_mean <- test %>% select(id, pred) %>% arrange(id)
-colnames(test_mean_mod_pc) <- c("id", "Demanda_uni_equil")
+colnames(submit_cond_mean) <- c("id", "Demanda_uni_equil")
 write.csv(submit_cond_mean, file = "submit_cond_mean.csv", row.names = FALSE)
-
 ```
+
+## Kaggle results
+This model earned an RMSLE score of 0.48943 on the test evaluation. Current top score is 0.42927
+
+
+Clear environment and display session info
 
 ```{r}
 rm(list = ls())
