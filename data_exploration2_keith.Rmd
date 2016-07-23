@@ -8,32 +8,76 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
+library(tidyr)
 library(data.table)
 library(feather)
 library(ggplot2)
 ```
+
 # Load Data
 
 ```{r}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
-load("train1.Rdata")
 load("train2.Rdata")
-load("validate.Rdata")
-load("test.Rdata")
-load("clients.Rdata")
-load("products.Rdata")
-load("town_state.Rdata")
-
-
 ```
 
-Although there are no NA's or NULLs in the data set, there appears to be many products where demand might be zero, but might not be present as zeroes in the data. 
 
-## Missing data?
 
+## Is current human model under estimating demand?
+
+### How is the current model reacting to returned products? 
+
+Hypothesis: products with returns will show a lower supply the following week. 
 ```{r}
+# # From Carolyn, merge all possible weeks to data frame. 
+# dates <- train2 %>%
+#   group_by(week) %>%
+#   summarise(dummy=1)
+# 
+# combinations <- train2 %>%
+#   group_by(product, client, depot) %>%
+#   summarise(earliest_week=min(week),
+#             dummy=1)
+# 
+# #combine combinations and dates using dummy variable (all possible combinatons including missing rows)
+# combinations <- combinations %>%
+#   left_join(dates, by="dummy") 
+# 
+# combinations <- combinations %>%
+#   left_join(train2, by=c("product", "week", "client", "depot")) 
 
+# Create lag and lead sales data - shows the 'supply' to stores
+explore <- train2 %>% 
+  group_by(product, client, depot) %>%
+  arrange(week) %>% 
+  mutate(sales_delta = sales_units - lag(sales_units), 
+         sales_lead_delta = lead(sales_units) - sales_units)
+
+explore <- mutate(explore, hasreturn = (returns_units > 0))
+explore[is.na(explore)] <- 0
+
+summary(explore$sales_lead_delta)
+
+sum(explore$hasreturn) 
+sum(explore$hasreturn) / length(explore$hasreturn)
+  
+save(explore, file = "explore.Rdata")
+load("explore.Rdata")
+set.seed(0928645)
+sampled <- sample_frac(explore, 0.1, replace = FALSE)
+colnames(sampled) 
+
+ggplot(sampled, aes(x=hasreturn, y= sales_lead_delta)) + geom_boxplot()
+
+mean(explore$sales_lead_delta[explore$hasreturn])
+mean(explore$sales_lead_delta[!explore$hasreturn])
+
+ggplot(sampled, aes(log(returns_units), sales_lead_delta)) + 
+  geom_point() + 
+  stat_smooth() +
+  ggtitle("Effect of number of returns from previous week on following weeks sales") +
+  ylab("Change in Sales") +
+  xlab("Number of units returned (Log scale)")
+
+#ggplot(explore, aes(returns_units, sales_lead_delta)) + geom_point() + stat_smooth()
 ```
-
-
-
