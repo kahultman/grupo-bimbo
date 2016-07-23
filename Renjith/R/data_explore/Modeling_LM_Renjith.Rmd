@@ -1,81 +1,153 @@
 ---
-title: "Time Series"
+  title: "Time Series"
 author: "Renjith Madhavan"
 date: "June 22, 2016"
 output: html_document
 ---
 
----
-title: "Modeling_Renjith"
-author: "Renjith Madhavan"
-date: "June 18, 2016"
-output: html_document
----
 
-
-
+  
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+#install.packages("dplyr")
 library(dplyr)
 library(data.table)
-library(feather)
+#library(feather)
 library(ggplot2)
 library(treemap)
 library(h2o)
+library(sqldf)
+library(stringr)
+
+#install.packages("xgboost")
+# install.packages("caret")
+#install.packages("sqldf")
+#install.packages("ggplot2")
+
+library(caret)
+brand_list <- function(x) {
+  tokens <- strsplit(as.character(x), " ")[[1]]
+  tokens[length(tokens) - 1]
+}
+
+extract_token <- function(value, expr) {
+  tokens <- strsplit(value, " ")
+  index <- grep(expr, tokens)
+  ifelse(length(index) == 0, NA, tokens[index[1]])
+}
+
+extract_weight <- function(product_name) {
+  weight_str <- extract_token(product_name, "\\d+[Kg|g]")
+  if (is.na(weight_str)) return(NA)
+  groups <- str_match_all(weight_str, "(\\d+)(Kg|g)")
+  weight <- strtoi(groups[[1]][2])
+  unit <- groups[[1]][3]
+  ifelse(unit == "Kg", 1000 * weight, weight)
+}
+
+extract_pieces <- function(product_name) {
+  pieces_str <- extract_token(product_name, "\\d+p\\b")
+  if (is.na(pieces_str)) return(NA)
+  groups <- str_match_all(pieces_str, "(\\d+)(p)")
+  return(strtoi(groups[[1]][2]))
+}
 ```
 
 ```{r}
-setwd("D:/r/wd/bimbo")
-load("data/rdf/train2.Rdata")
-load("data/rdf/validate.Rdata")
+#setwd("C:/renjith/datascience/git/data/grupobimbo")
+setwd("D:/r/wd/bimbo/data/source")
+train <- fread("train.csv", header = TRUE)
+train <- tbl_df(train)
+test <- fread("test.csv", header = TRUE)
+test <- tbl_df(test)
+#clients <- tbl_df(read.csv("cliente_tabla.csv"))
+products <- tbl_df(read.csv("producto_tabla.csv"))
+town_state <- tbl_df(read.csv("town_state.csv"))
+colnames(train) <- c("week", "depot", "channel", "route", "client", "product", "sales_units", "sales", "returns_units", "returns", "demand")
+colnames(test) <- c("id", "week", "depot", "channel", "route", "client", "product")
+#colnames(clients) <- c("client", "client_name")
+colnames(products) <- c("product", "product_name")
+colnames(town_state) <- c("depot", "town", "state")
 
-# validate$sales_units <- NULL
-# validate$sales <- NULL
-# validate$returns <- NULL
-# validate$returns_units <- NULL
+setwd("D:/r/wd/bimbo/data/rdf/20160723")
+save(train, file = "train.Rdata")
+save(test, file = "test.Rdata")
+save(products, file = "products.Rdata")
+save(town_state, file = "town_state.Rdata")
 
-new_products <- validate %>%
-  filter(!paste0(validate$product, validate$client) %in% paste0(train2$product, train2$client) )
-new_products[1:10,]
+rm(list=ls())
 
-train2[1:10,]
+load("train.Rdata")
+load("test.Rdata")
+load("products.Rdata")
+load("town_state.Rdata")
 
-#lm_train2 <- lm(demand ~ week + client + product, data = train2)
+#train$returns_units <-  NULL
+train$sales <- NULL
+train$returns <- NULL
+#train$sales_units <- NULL
 
-train_last_week <- train2 %>% 
-  filter(week >= 7) %>% 
-  transmute(client, product, demand)
+train[1:10,]
+products[1:10,]
 
-train_last_week[1:10,]
-train_last_week$product <- as.integer(train_last_week$product)
-train_last_week$client <- as.integer(train_last_week$client) # added for muti variate linear model
-lm_train2 <- lm(demand ~ product, data = train_last_week)
-summary(lm_train2)
-validate[1:10,]
-validate.demand <- validate$demand
+products$product_name <- as.character(products$product_name)
+products$brands <- unlist(lapply(products$product_name, brand_list))
+products <- products[-c(products$brands == "IDENTIFICADO"),]
+brands_v <- sqldf("select distinct brands from products order by 1")
+brands_vt <- data.frame(brands = brands_v, brand_id = sequence(length(brands_v$brands)) )
+brands_vt[1:10,]
 
-validate$demand <- NULL
-validate$product <- as.integer(validate$product)
-validate.predict <- predict(lm_train2, validate)
-
-validate.predict[1:10]
-sum(validate.predict[validate.predict < 5 ])
-hist(validate.predict)
-sqerror <- (log(validate.predict + 1) - log(validate.demand + 1))^2
-epsilon <- sqrt(sum(sqerror) / length(sqerror))
-epsilon
-
-# multivariate linear model
-
-lm_train2 <- lm(demand ~ product, data = train_last_week)
+product_names <-  as.character(products$product_name)
+weight <- unlist(lapply(product_names, extract_weight))
+pieces <- unlist(lapply(product_names, extract_pieces))
+products <- cbind(products, weight, pieces)
+products$product_name <-NULL
 
 
-## trying product and client
-lm_train3 <- lm(demand ~ client + product, data = train_last_week)
-summary(lm_train3)
-validate$client <- as.integer(validate$client)
-validate2.predict <- predict(lm_train3, validate)
-sqerror <- (log(validate2.predict + 1) - log(validate.demand + 1))^2
-epsilon <- sqrt(sum(sqerror) / length(sqerror))
-epsilon
+town_state[1:10,]
+#town_state$depot <- as.integer(levels(town_state$depot))
+town_state$town <- as.character(town_state$town)
+town_state$state <-  as.character(town_state$state)
+town_state$state <- iconv(town_state$state, "latin1", "ASCII", sub="")
+town_state$town <- iconv(town_state$town, "latin1", "ASCII", sub="")
+state_v <- sqldf("select distinct state from town_state")
+state_vt <- data.frame(state_name=state_v, state_id=sequence(length(state_v$state)) )
+town_v <-  sqldf("select distinct town from town_state ")
+town_vt <- data.frame(own_name=town_v, town_id=sequence(length(town_v$town)))
+town_state <- town_state %>%
+  left_join(town_vt, by = "town") %>%
+  left_join(state_vt, by = "state") %>%
+  arrange(depot)
+town_state$town <- NULL
+town_state$state <- NULL
+town_state[1:10,]
+rm(town_vt) ; rm(state_vt)
+rm(town_v)
+rm(state_v)
+
+train[1:10,] ; products[1:10,] ; town_state[1:10,]
+train <- as.data.frame(train)
+products <- as.data.frame(products)
+town_state <- as.data.frame(town_state)
+
+train <-  train %>%
+  left_join(products, by="product") %>%
+  left_join(town_state, by="depot")
+
+train[1:10,]
+
+
+
+save(train, file = "trainxx.Rdata")
+
+test[1:10,]
+
+test <-  test %>%
+  left_join(products, by="product") %>%
+  left_join(town_state, by="depot")
+
+save(test, file = "testxx.Rdata")
+
 ```
+
+

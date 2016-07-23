@@ -20,8 +20,8 @@ library(dplyr)
 The first step in doing the analysis would be to load the data into R. For this I am using data.table package from CRAN. 
 
 ```{r}
-setwd("C:/r/wd/bimbo")
-train <- fread("data/source/train.csv", header = TRUE)
+setwd("D:/r/wd/bimbo")
+train <- fread("data/source/train.csv", header = TRUE, colClasses = c(Cliente_ID="numeric",Producto_ID="numeric",Demanda_uni_equil="numeric"), col.names = c("week", "depot", "channel", "route", "client", "product", "sales_units", "sales", "returns_units", "returns", "demand"))
 #train <- fread("C:/renjith/datascience/git/data/grupobimbo/train.csv", header = TRUE)
 train <- tbl_df(train)
 test <- fread("data/source/test.csv", header = TRUE)
@@ -56,13 +56,15 @@ validate %>%
   group_by(week) %>%
   summarise(Number = n())
 
-save(train, file = "data/rdf/train.Rdata")
-save(train2, file = "data/rdf/train2.Rdata")
-save(validate, file = "data/rdf/validate.Rdata")
-save(test, file = "data/rdf/test.Rdata")
-save(clients, file = "data/rdf/clients.Rdata")
-save(products, file = "data/rdf/products.Rdata")
-save(town_state, file = "data/rdf/town_state.Rdata")
+save(train, file = "data/rdf/renjith/train.Rdata")
+save(train2, file = "data/rdf/renjith/train2.Rdata")
+save(validate, file = "data/rdf/renjith/validate.Rdata")
+save(test, file = "data/rdf/renjith/test.Rdata")
+save(clients, file = "data/rdf/renjith/clients.Rdata")
+save(products, file = "data/rdf/renjith/products.Rdata")
+save(town_state, file = "data/rdf/renjith/town_state.Rdata")
+
+
 
 
 

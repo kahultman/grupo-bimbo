@@ -1,0 +1,115 @@
+---
+title: "Time Series"
+author: "Renjith Madhavan"
+date: "June 22, 2016"
+output: html_document
+---
+
+---
+title: "Modeling_Renjith"
+author: "Renjith Madhavan"
+date: "June 18, 2016"
+output: html_document
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(forecast)
+library(dplyr)
+library(data.table)
+library(feather)
+library(ggplot2)
+library(treemap)
+library(h2o)
+```
+
+```{r}
+setwd("D:/r/wd/bimbo")
+load("data/rdf/renjith/train.Rdata")
+library(sqldf)
+sqldf("select distinct product from train where demand > 500 order by 1")
+
+
+
+
+
+
+
+
+
+
+load("data/rdf/validate.Rdata")
+#rm(list = ls())
+train2[1:10,]
+
+train2[product == 1212 & client == 15766]
+
+week_table <- matrix(c(3:7), ncol = 1)
+colnames(week_table) <- "week"
+week_table <- as.table(week_table)
+
+d1 <- subset(train2[product == 1212 & client == 15766], select=c("week","demand"))
+
+week_table <- as.data.table(week_table)
+setnames(week_table, "N", "week")
+week_table
+
+ts2 <- week_table %>%
+  select(week) %>%
+  left_join(d1, by = "week") %>%
+  select(week, demand)
+
+ts2[is.na(ts2$demand)]$demand <- median(ts2$demand, na.rm = TRUE)
+ts2 <- as.ts(ts1[,demand], start = 3, frequency = 52)
+ts2
+
+
+gas <- ts(read.csv("data/scratch/gasoline.csv", header = FALSE)[, 1], frequency = 365.25/7, start=1991+31/365.25)
+bestfit <- list(aicc = Inf)
+for(i in 1:25)
+{
+  fit <- auto.arima(gas, xreg=fourier(gas, K=i), seasonal=FALSE)
+  if(fit$aicc < bestfit$aicc)
+    bestfit <- fit
+  else break;
+}
+fc <- forecast(bestfit, xreg=fourier(gas, K=12, h=104))
+
+plot(fc)
+ts1 <- ts(ts2$demand, frequency = 52, start = 3)
+
+arima_fit <- auto.arima(ts1)
+arima_forecast <- forecast(arima_fit, h = 2)
+test <- ts1[6:8]
+arima_fit_accuracy <-  accuracy(arima_forecast, test)
+plot(arima_forecast, ylim=c(0,10))
+lines(ts1[1:10])
+ts1
+arima_forecast
+
+plot(ts1)
+ts1
+t1 <- predict(arima_fit, n.ahead = 2)
+
+t1
+x
+ts1
+
+t2 <- arima_forecast$mean
+as.numeric(t2)
+?forecast
+
+ts1 <- ts(ts2$demand, frequency = 2, start = 1)
+plot(ts1)
+
+ts2 <- HoltWinters(ts1)
+forecast <-  predict(ts2, n.ahead = 2, prediction.interval = T, level = 0.95)
+
+plot(ts2, forecast)
+ts1
+
+
+```
