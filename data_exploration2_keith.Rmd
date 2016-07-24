@@ -13,71 +13,66 @@ library(data.table)
 library(feather)
 library(ggplot2)
 ```
-
 # Load Data
 
 ```{r}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+load("train1.Rdata")
 load("train2.Rdata")
+load("validate.Rdata")
+load("test.Rdata")
+load("clients.Rdata")
+load("products.Rdata")
+load("town_state.Rdata")
 ```
 
 
 
 ## Is current human model under estimating demand?
 
-### How is the current model reacting to returned products? 
-
-Hypothesis: products with returns will show a lower supply the following week. 
 ```{r}
-# # From Carolyn, merge all possible weeks to data frame. 
-# dates <- train2 %>%
-#   group_by(week) %>%
-#   summarise(dummy=1)
-# 
-# combinations <- train2 %>%
-#   group_by(product, client, depot) %>%
-#   summarise(earliest_week=min(week),
-#             dummy=1)
-# 
-# #combine combinations and dates using dummy variable (all possible combinatons including missing rows)
-# combinations <- combinations %>%
-#   left_join(dates, by="dummy") 
-# 
-# combinations <- combinations %>%
-#   left_join(train2, by=c("product", "week", "client", "depot")) 
+wks <- unique(train2$week)
+wks <- data.table(wks)
+train2 <- data.table(train2)
 
-# Create lag and lead sales data - shows the 'supply' to stores
-explore <- train2 %>% 
+
+# From Carolyn, merge all possible weeks to data frame. 
+dates <- train2 %>%
+  group_by(week) %>%
+  summarise(dummy=1)
+
+combinations <- train2 %>%
+  group_by(product, client, depot) %>%
+  summarise(earliest_week=min(week),
+            dummy=1)
+
+#combine combinations and dates using dummy variable (all possible combinatons including missing rows)
+combinations <- combinations %>%
+  left_join(dates, by="dummy") %>%
+  filter(week>=earliest_week) #CAN CHANGE DURING TESTING: only keep weeks starting with earliest sales (assuming no sale before first sale)
+
+combinations <- combinations %>%
+  left_join(train2, by=c("product", "week", "client", "depot")) 
+
+combinations2 <- combinations %>% 
+  select(-dummy) %>% 
   group_by(product, client, depot) %>%
   arrange(week) %>% 
-  mutate(sales_delta = sales_units - lag(sales_units), 
-         sales_lead_delta = lead(sales_units) - sales_units)
+  mutate(sales_delta = sales_units - lag(sales_units), sales_lead_delta = sales_units - lead(sales_units))
 
-explore <- mutate(explore, hasreturn = (returns_units > 0))
-explore[is.na(explore)] <- 0
+combinations2 <- mutate(combinations2, hasreturn = (returns_units > 0))
 
-summary(explore$sales_lead_delta)
+combinations2[is.na(combinations2)] <- 0
+summary(combinations2$sales_lead_delta)
 
-sum(explore$hasreturn) 
-sum(explore$hasreturn) / length(explore$hasreturn)
+sum(combinations2$returns_units > 0) / length(combinations2$returns_units)
   
-save(explore, file = "explore.Rdata")
-load("explore.Rdata")
-set.seed(0928645)
-sampled <- sample_frac(explore, 0.1, replace = FALSE)
-colnames(sampled) 
+prev_returned <- combinations2 %>% filter(prev_return > 0)
+prev_notreturn <- combinations2 %>% filter(prev_return = 0)
 
-ggplot(sampled, aes(x=hasreturn, y= sales_lead_delta)) + geom_boxplot()
+colnames(combinations)  
 
-mean(explore$sales_lead_delta[explore$hasreturn])
-mean(explore$sales_lead_delta[!explore$hasreturn])
+ggplot(combinations2, aes(x=hasreturn, y= sales_lead_delta)) + geom_boxplot()
 
-ggplot(sampled, aes(log(returns_units), sales_lead_delta)) + 
-  geom_point() + 
-  stat_smooth() +
-  ggtitle("Effect of number of returns from previous week on following weeks sales") +
-  ylab("Change in Sales") +
-  xlab("Number of units returned (Log scale)")
 
-#ggplot(explore, aes(returns_units, sales_lead_delta)) + geom_point() + stat_smooth()
-```
+

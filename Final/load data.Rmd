@@ -1,0 +1,125 @@
+---
+title: "load data"
+author: "Keith Hultman"
+date: "June 10, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(data.table)
+library(feather)
+```
+
+# Grupo Bimbo
+
+## Load Data
+
+```{r}
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+
+# Using fread function to speed things up with the train.csv file
+train <- fread("train.csv", header = TRUE)
+train <- tbl_df(train)
+test <- fread("test.csv", header = TRUE)
+test <- tbl_df(test)
+
+# Using standard read.csv for smaller data sets
+clients <- tbl_df(read.csv("cliente_tabla.csv"))
+products <- tbl_df(read.csv("producto_tabla.csv"))
+town_state <- tbl_df(read.csv("town_state.csv"))
+```
+
+## Translate column names into English
+
+```{r Translate Columns}
+colnames(train) <- c("week", "depot", "channel", "route", "client", "product", "sales_units", "sales", "returns_units", "returns", "demand")
+colnames(test) <- c("id", "week", "depot", "channel", "route", "client", "product")
+colnames(clients) <- c("client", "client_name")
+colnames(products) <- c("product", "product_name")
+colnames(town_state) <- c("depot", "town", "state")
+```
+
+## Split training set
+
+```{r Split train into train and validation sets}
+train2 <- train %>% filter(week <= 7)
+
+train2 %>% 
+  group_by(week) %>%
+  summarise(Number = n())
+
+validate <- train %>% filter(week > 7)
+
+validate %>% 
+  group_by(week) %>%
+  summarise(Number = n())
+```
+
+## Set Data Types
+
+```{r}
+train2
+train2$depot <- as.factor(train2$depot)
+train2$channel <- as.factor(train2$channel)
+train2$client <- as.factor(train2$client)
+train2$product <- as.factor(train2$product)
+train2$route <- as.factor(train2$route)
+
+#train1
+train1$depot <- as.factor(train1$depot)
+train1$channel <- as.factor(train1$channel)
+train1$client <- as.factor(train1$client)
+train1$product <- as.factor(train1$product)
+train1$route <- as.factor(train1$route)
+
+#validate
+validate$depot <- as.factor(validate$depot)
+validate$channel <- as.factor(validate$channel)
+validate$client <- as.factor(validate$client)
+validate$product <- as.factor(validate$product)
+validate$route <- as.factor(validate$route)
+
+#clients
+clients$client <- as.factor(clients$client)
+
+#products
+products$product <- as.factor(product)
+
+#town_state
+town_state$depot <- as.factor(town_state$depot)
+
+#test
+test$depot <- as.factor(test$depot)
+test$channel <- as.factor(test$channel)
+test$client <- as.factor(test$client)
+test$product <- as.factor(test$product)
+test$route <- as.factor(test$route)
+```
+
+## Save data
+
+```{r}
+# Save as R dataframes, which take up less space than csv files
+# These files will be loaded into other scripts instead of the csv files
+
+system.time(save(train, file = "train.Rdata"))
+# Test feather
+system.time(write_feather(train, "train.feather"))
+# only takes 1/3rd the time 
+
+save(train2, file = "train2.Rdata")
+save(train1, file = "train1.Rdata")
+save(validate, file = "validate.Rdata")
+save(test, file = "test.Rdata")
+save(clients, file = "clients.Rdata")
+save(products, file = "products.Rdata")
+save(town_state, file = "town_state.Rdata")
+
+
+# Also saving as csv file for input into Microsoft Azure ML and other tools
+# write.csv(train2, file = "train2.csv")
+# 
+```

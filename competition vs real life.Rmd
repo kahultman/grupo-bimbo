@@ -34,3 +34,6 @@ load("train1.Rdata")
 
 ```
 
+Suggestions to Grupo Bimbo for further 
+
+* Better Data Collection
