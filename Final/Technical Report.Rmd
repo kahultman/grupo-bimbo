@@ -46,7 +46,21 @@ library(ggplot2)
 
 - Implementation of final Grupo Bimbo Demand Prediction model
 
-  
+## Project Overview
+
+Our client, Grupo Bimbo, wants to develop a model to accurately forecast inventory demand based on the historical sales data they collect. Grupo Bimbo is a large bakery store chain that has more than 2500 products spanning over one million stores. Their goal is to meet the product demand for their customers while minimizing unsold surplus. Our group is tasked to create a model to accurately forecast inventory demand based on the historical sales data provided. Creating a successful model will give each of the 1 million stores the ability to accurately request the appropriate amount of each bakery product on a weekly basis.
+
+### Description of Data
+
+Grupo Bimbo supplied 9 weeks of historical data that includes store and product ID, sales, returns, and demand by week. 
+
+The target variable is ‘Adjusted Demand’, which will be an integer representing the demand of a product, in units. 
+
+
+
+ The model will be evaluated for accuracy using the Root Mean Squared Logarithmic Error (RMSLE), which will penalize models that under-predict more than a model that over-predicts. 
+
+![CRISP](crisp_model.png)
 
 
 ## Competition vs IRL Dichotomy
