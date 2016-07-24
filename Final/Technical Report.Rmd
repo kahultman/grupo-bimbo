@@ -1,15 +1,29 @@
 ---
 title: "Grupo Bimbo Technical Report"
+subtitle: "Predicting Demand of Bakery Goods"
 author: "Keith Hultman, Carolyn Meier, Renjith Madhavan"
-date: "July 21, 2016"
-output: html_document
+date: "`r Sys.Date()`"
+output:
+  tufte::tufte_html: default
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+  tufte::tufte_book:
+    citation_package: natbib
+    latex_engine: xelatex
+bibliography: skeleton.bib
+link-citations: yes
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(tufte)
 library(dplyr)
 library(ggplot2)
+# invalidate cache when the tufte version changes
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
+options(htmltools.dir.version = FALSE)
 ```
+
 # Grupo Bimbo Technical Report
 
 ## Outline
