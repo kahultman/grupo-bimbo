@@ -1,0 +1,95 @@
+---
+title: "Baseline Model"
+author: "Keith Hultman"
+date: "June 12, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+```
+
+```{r}
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+load("train2.Rdata")
+load("validate.Rdata")
+
+validate$sales_units <- NULL
+validate$sales <- NULL
+validate$returns <- NULL
+validate$returns_units <- NULL
+validate
+```
+
+# Persistant Baseline Model
+
+This model assumes that the previous week's demand will persist to the following two weeks. If a product or store id is not found in the training data, then the model will predict that the demand will be the overall average demand.
+
+```{r}
+# Grab latest week data
+train_last_week <- train2 %>% 
+  filter(week >= 7) %>% 
+  transmute(client, product, prediction = demand)
+
+# For every product/client combo, have one prediction. Sum the predictions for duplicates in training data (these are multiple delivery routes to the same store)
+train_last_week2 <- train_last_week %>% 
+  group_by(client, product) %>% 
+  summarise(prediction = sum(prediction))
+
+# Identify the number of 'rows' in the validate set for product/client pairs
+validate2 <- validate %>%
+  group_by(client, product) %>% 
+  summarise(number = n())
+
+# This shows the distribution of multiples for each product/client pair
+table(validate2$number)
+
+# First join will put number of duplicate items in each row of the validate set.
+validate <- left_join(validate, validate2, by = c("client", "product"))
+# Next we'll put the predictions in. 
+validate <- left_join(validate, train_last_week2, by = c("client", "product"))
+# Divide the predicted value by the number of instances for each client/product
+validate$prediction <- validate$prediction / validate$number
+# Where there isn't a prediction, make it the overall median demand
+validate$prediction[is.na(validate$prediction)] <- median(train2$demand)
+validate$prediction_round <- round(validate$prediction, 0)
+validate$prediction_ceiling <- ceiling(validate$prediction)
+
+save(validate, file = "baseline_predictions.Rdata")
+
+load("baseline_predictions.Rdata")
+validate
+```
+
+## Evaluation
+
+We are using the Root Mean Squared Logarithmic Error, or RMSLE. 
+
+$$\epsilon = \sqrt{\frac{1}{n} \sum_{i=1}^{n} \big(log(p_i + 1)-log(a_i + 1)\big)^2}$$
+
+Where:
+
+$\epsilon$ is the RMSLE value (score)
+
+$n$ is the total number of observations in the data set,
+
+$p_i$ is the prediction of demand
+
+$a_i$ is the actual demand for $i$
+
+$log(x)$ is the natural logarithm of $x$
+
+
+```{r RMSLE}
+
+RMSLE <- function(prediction, actual){
+  sqerror <- (log(prediction + 1) - log(actual + 1))^2
+  epsilon <- sqrt(sum(sqerror) / length(sqerror))
+  return(epsilon)
+}
+RMSLE(validate$prediction, validate$demand)
+RMSLE(validate$prediction_round, validate$demand)
+RMSLE(validate$prediction_ceiling, validate$demand)
+```
+

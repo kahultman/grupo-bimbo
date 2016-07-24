@@ -1,0 +1,77 @@
+---
+title: "Grupo Bimbo Technical Report"
+author: "Keith Hultman"
+date: "July 21, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+```
+# Grupo Bimbo Technical Report
+
+## Outline
+- Overview of Project
+  - Project Goal
+  - Description of data available
+  - Baseline Model
+  - RMSLE: 
+  
+- Data Exploration 1
+  - Time trends
+  - 
+- Modelling 1: Time Series
+  - Demand ~ Week, for each Product/Client/Depot
+  - RMSLE:
+- Data Exploration 2
+  - Time factor is primarily noise - focus on non-time factors
+  -
+- Modelling 2: Conditional Means
+  - Mean vs Median vs Mean(log+1)
+  - Conditional means
+  - RMSLE:
+  - CLRM - Conditional Linear Regression of Means
+  - RMSLE:
+  
+- Feature engineering
+  - Brand
+  - Weight
+  - Lag
+  - 
+- Modelling 3: XGBoost
+
+- Ensemble of CLRM and XGBoost
+
+- Implementation of final Grupo Bimbo Demand Prediction model
+
+  
+
+
+## Competition vs IRL Dichotomy
+
+In the proposed real-world situation, our model would be deployed to predict demand for Grupo Bimbo's products and we would be able to evaluate how well our predicted demand matched the actual demand for the products based on the number of returns the company observed. 
+
+### The ideal: An A/B experiment to determine actual demand.
+
+A primary limitation of this data set is that demand is approximated by subtracting the supply from the following week's return of inventory. This would naturally allow for an accurate estimate of demand when supply is higher than demand, but would not accurately estimate demand in cases where the product is under-supplied. 
+
+Using RMSLE helps with this in some ways by having a greater cost for under estimated demand than over estimated demand. However, this alone would not guarentee accurate model evaluation with true demand. 
+
+After model implementation, products should be intentionally overstocked if the product's demand is evaluated by data with no returns. 
+
+
+
+Are 
+
+```{r}
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+load("train1.Rdata")
+
+
+```
+
+Suggestions to Grupo Bimbo for further 
+
+* Better Data Collection

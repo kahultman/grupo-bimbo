@@ -1,0 +1,106 @@
+---
+title: "conditional-mean.Rmd"
+author: "Keith Hultman"
+date: "July 20, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(broom)
+
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+load("train1.Rdata")
+load("test.Rdata")
+
+```
+
+# Conditional Mean Demand model
+This model predicts that the demand for a product is the mean of the log of demand for each client and product. If the client product median is not available, it will use the product median demand. If the product median is not available it will use the overall median demand. 
+
+```{r}
+# Calculate the log of demand (log(demand+1))
+train1$log_demand <- log1p(train1$demand)
+
+# Find the overall mean demand
+overall <- mean(train1$log_demand)
+
+# Product mean demand
+product <- train1 %>%
+  group_by(product) %>%
+  summarise(p_d = mean(log_demand))
+
+# Product/Client mean demand
+product_route <- train1 %>%
+  group_by(product, route) %>%
+  summarise(p_r_d = mean(log_demand))
+
+# Product/Client/Depot mean demand
+product_client_depot <- train1 %>%
+  group_by(product, client, depot) %>%
+  summarise(p_c_d_d = mean(log_demand))
+
+```
+
+Merge train data with all rows with mean models.
+
+```{r}
+mean_mod <- left_join(train1, product_client_depot, by = c("product", "client", "depot"))
+mean_mod <- left_join(mean_mod, product_route, by = c("product", "route"))
+mean_mod <- left_join(mean_mod, product, by = "product")
+
+mean_mod <- mean_mod %>% select(-sales_units, -sales, -returns_units, -returns)
+```
+
+Linear regression modelling for weighting the various 'means'. 
+
+```{r}
+
+lm1 <- lm(log_demand ~ p_c_d_d + p_r_d, data = mean_mod)
+lm1 <- tidy(lm1)
+
+lm2 <- lm(log_demand ~ p_r_d + p_d, data = mean_mod)
+lm2 <- tidy(lm2)
+```
+
+Merge test data with mean models.
+
+```{r}
+test <- left_join(test, product_client_depot, by = c("product", "client", "depot"))
+test <- left_join(test, product_route, by = c("product", "route"))
+test <- left_join(test, product, by = "product")
+```
+
+Create predictions
+
+```{r}
+test$pred <- lm1$estimate[2]*test$p_c_d_d + lm1$estimate[3]*test$p_r_d + lm1$estimate[1]
+test$pred[is.na(test$pred)] <- test$p_r_d[is.na(test$pred)]
+test$pred[is.na(test$pred)] <- test$p_d[is.na(test$pred)]
+test$pred[is.na(test$pred)] <- overall
+
+# take the exponent 
+test$pred <- expm1(test$pred)
+test$pred <- round(test$pred, 3)
+```
+
+Create submission file
+
+```{r}
+submit_cond_mean <- test %>% select(id, pred) %>% arrange(id)
+colnames(submit_cond_mean) <- c("id", "Demanda_uni_equil")
+write.csv(submit_cond_mean, file = "submit_cond_mean.csv", row.names = FALSE)
+```
+
+## Kaggle results
+This model earned an RMSLE score of 0.48943 on the test evaluation. Current top score is 0.42927
+
+
+Clear environment and display session info
+
+```{r}
+rm(list = ls())
+sessionInfo()
+```
+
