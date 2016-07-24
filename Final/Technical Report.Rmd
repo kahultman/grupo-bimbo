@@ -1,6 +1,6 @@
 ---
 title: "Grupo Bimbo Technical Report"
-author: "Keith Hultman"
+author: "Keith Hultman, Carolyn Meier, Renjith Madhavan"
 date: "July 21, 2016"
 output: html_document
 ---
@@ -85,7 +85,7 @@ Are
 
 ```{r}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
-load("train1.Rdata")
+#load("train1.Rdata")
 
 
 ```
