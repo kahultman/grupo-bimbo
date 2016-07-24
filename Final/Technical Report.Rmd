@@ -4,15 +4,8 @@ subtitle: "Predicting Demand of Bakery Goods"
 author: "Keith Hultman, Carolyn Meier, Renjith Madhavan"
 date: "`r Sys.Date()`"
 output:
-  tufte::tufte_html: default
-  tufte::tufte_handout:
-    citation_package: natbib
-    latex_engine: xelatex
-  tufte::tufte_book:
-    citation_package: natbib
-    latex_engine: xelatex
-bibliography: skeleton.bib
-link-citations: yes
+  html_document:
+    toc: TRUE
 ---
 
 ```{r setup, include=FALSE}
@@ -20,40 +13,40 @@ library(tufte)
 library(dplyr)
 library(ggplot2)
 # invalidate cache when the tufte version changes
-knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
-options(htmltools.dir.version = FALSE)
+#knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
+#options(htmltools.dir.version = FALSE)
 ```
 
 # Grupo Bimbo Technical Report
 
 ## Outline
 - Overview of Project
-  - Project Goal
-  - Description of data available
-  - Baseline Model
-  - RMSLE: 
+    - Project Goal
+    - Description of data available
+    - Baseline Model
+    - RMSLE: 
   
 - Data Exploration 1
-  - Time trends
-  - 
+    - Time trends
+    - 
 - Modelling 1: Time Series
-  - Demand ~ Week, for each Product/Client/Depot
-  - RMSLE:
+    - Demand ~ Week, for each Product/Client/Depot
+    - RMSLE:
 - Data Exploration 2
-  - Time factor is primarily noise - focus on non-time factors
-  -
+    - Time factor is primarily noise - focus on non-time factors
+    -
 - Modelling 2: Conditional Means
-  - Mean vs Median vs Mean(log+1)
-  - Conditional means
-  - RMSLE:
-  - CLRM - Conditional Linear Regression of Means
-  - RMSLE:
+    - Mean vs Median vs Mean(log+1)
+    - Conditional means
+    - RMSLE:
+    - CLRM - Conditional Linear Regression of Means
+    - RMSLE:
   
 - Feature engineering
-  - Brand
-  - Weight
-  - Lag
-  - 
+    - Brand
+    - Weight
+    - Lag
+    - 
 - Modelling 3: XGBoost
 
 - Ensemble of CLRM and XGBoost
@@ -73,7 +66,8 @@ The target variable is ‘Adjusted Demand’, which will be an integer represent
 
 ### Data Science Plan and Process
 
-Our team of data scientists will be using the CRISP method of data science ![CRISP](crisp_model.png). This technical report will mirror the data science steps outlined in CRISP. Our team decided to primarily use R for the visualization and modeling processes. We collaborated by using a [git repository](https://github.com/kahultman/grupo-bimbo), and our code is available there. Communication between group members was primarily using Slack and a weekly Google Hangouts video conference. 
+Our team of data scientists will be using the CRISP method of data science. ![CRISP](crisp_model.png) 
+This technical report will mirror the data science steps outlined in CRISP. Our team decided to primarily use R for the visualization and modeling processes. We collaborated by using a [git repository](https://github.com/kahultman/grupo-bimbo), and our code is available there. Communication between group members was primarily using Slack and a weekly Google Hangouts video conference. 
 
 Each model will be evaluated for accuracy using the Root Mean Squared Logarithmic Error (RMSLE). This measure for estimating error will penalize models that under-predict more than a model that over-predicts. 
 
@@ -94,8 +88,6 @@ Using RMSLE helps with this in some ways by having a greater cost for under esti
 After model implementation, products should be intentionally overstocked if the product's demand is evaluated by data with no returns. 
 
 
-
-Are 
 
 ```{r}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
