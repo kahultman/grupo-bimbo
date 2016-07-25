@@ -40,7 +40,6 @@ product_route <- train1 %>%
 product_client_depot <- train1 %>%
   group_by(product, client, depot) %>%
   summarise(p_c_d_d = mean(log_demand))
-
 ```
 
 Merge train data with all rows with mean models.
@@ -53,10 +52,15 @@ mean_mod <- left_join(mean_mod, product, by = "product")
 mean_mod <- mean_mod %>% select(-sales_units, -sales, -returns_units, -returns)
 ```
 
+```{r}
+
+mean_mod <- train1[product_client_depot]
+```
+
+
 Linear regression modelling for weighting the various 'means'. 
 
 ```{r}
-
 lm1 <- lm(log_demand ~ p_c_d_d + p_r_d, data = mean_mod)
 lm1 <- tidy(lm1)
 

@@ -84,11 +84,13 @@ During the initial data exploration step, each of us independently explored the 
 
 Since our project was based off of a Kaggle competition, it is worth pointing out how the competition rules shaped and limited our approach to the project. If our project were a real-world situation, our model would be deployed to predict demand for Grupo Bimbo's products and we would be able to evaluate how well our predicted demand matched the actual demand for the products based on the number of returns the company observed following deployment. For example if our model predicted an increase in demand for product #384 at store #1381 from 15 units to 20 units, Grupo Bimbo would increase the sales to that store and record the number of returned units the following week. However, since both the train and the test data sets are historical, the actual recorded demand is based off of sales without deploying our model. In other words, the cake is already baked and the record for demand is actually based in part on the current human model of demand.  
 
+Only 3% of weekly product sales involve any returned products. If the human model is responsive to these returns we expect to see a drop in the following week's deliveries. However, it looks like the human model is not responsive to a product with returns or the number of returned units. 
+
 ```{r Responsiveness of Human model, echo=FALSE, message=TRUE, warning=FALSE}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
 load("sampled_returns.Rdata")
 
-plot1 <- ggplot(sampled, aes(x=hasreturn, y= sales_lead_delta)) + 
+plot1 <- ggplot(sampled, aes(x=has_return, y= sales_lead_delta)) + 
   geom_boxplot() + 
   ggtitle("Comparison of product with and \n without returns on following \n week's supply") +
   ylab("Change in Sales (week x+1 - week x)") +
@@ -106,6 +108,8 @@ multiplot(plot1, plot2, cols=2)
 setwd("~/github/grupo-bimbo/Final/")
 ```
 
+We consider this beneficial for our model because we can estimate actual demand rather than predict effects from the current human model. 
+
 After model implementation, products should be intentionally overstocked if the product's demand is evaluated by data with no returns. 
 
 ![Sample Demand Over Time](sample_time_trend.png)
@@ -116,7 +120,33 @@ After model implementation, products should be intentionally overstocked if the 
 ## Data Exploration 2
 
 
-## Modelling 2: Conditional means
+
+## Modelling 2: Conditional Medians
+
+Demand = median {PC}
+Demand = median {P}
+Demand = median all products
+
+RMSLE score of 0.50941
+
+Demand = median {PCD}
+Demand = median {PC}
+Demand = median {P}
+Demand = median all products
+
+RMSLE score of 0.50922
+
+
+### Conditional Linear Regression of Means
+
+
+
+Demand ~ \mu {PCD} + \mu {PR}
+Demand ~ \mu {PR}
+Demand ~ \mu {P}
+Demand ~ \mu all products
+
+RMSLE score of 0.48943
 
 ## Feature Engineering
 

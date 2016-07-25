@@ -21,20 +21,25 @@ load("train2.Rdata")
 ## Is current human model under estimating demand?
 
 ```{r}
+explore <- mutate(train2, has_return = (returns_units > 0))
+
 # Create lag and lead sales data - shows the 'supply' to stores
-explore <- train2 %>% 
+explore <- explore %>% 
   group_by(product, client, depot) %>%
   arrange(week) %>% 
   mutate(sales_delta = sales_units - lag(sales_units), 
-         sales_lead_delta = lead(sales_units) - sales_units)
+         sales_lead_delta = lead(sales_units) - sales_units,
+         demand_delta = demand - lag(demand),
+         demand_lead_delta = lead(demand) - demand,
+         had_return = lag(has_return))
 
-explore <- mutate(explore, hasreturn = (returns_units > 0))
+
 explore[is.na(explore)] <- 0
 
 summary(explore$sales_lead_delta)
 
-sum(explore$hasreturn) 
-sum(explore$hasreturn) / length(explore$hasreturn)
+sum(explore$has_return) 
+sum(explore$has_return) / length(explore$has_return)
   
 save(explore, file = "explore.Rdata")
 load("explore.Rdata")
@@ -46,7 +51,10 @@ save(sampled, file = "sampled_returns.Rdata")
 ```{r}
 load("sampled_returns.Rdata")
 
-ggplot(sampled, aes(x=hasreturn, y= sales_lead_delta)) + geom_boxplot()
+ggplot(sampled, aes(x=has_return, y= sales_lead_delta)) + geom_boxplot()
+ggplot(sampled, aes(x=has_return, y= demand)) + geom_boxplot()
+median(sampled$returns_units[sampled$has_return == TRUE])
+median(sampled$returns_units[sampled$has_return == FALSE])
 
 ggplot(sampled, aes(log(returns_units), sales_lead_delta)) + 
   geom_point() + 
@@ -54,6 +62,14 @@ ggplot(sampled, aes(log(returns_units), sales_lead_delta)) +
   ggtitle("Effect of number of returns from previous week on following weeks sales") +
   ylab("Change in Sales") +
   xlab("Number of units returned (Log scale)")
+
+ggplot(sampled, aes(log(returns_units), demand)) + 
+  geom_point() + 
+  stat_smooth() +
+  ggtitle("Effect of number of returns from previous week on following weeks demand") +
+  ylab("Demand") +
+  xlab("Number of units returned (Log scale)")
+
 
 #ggplot(explore, aes(returns_units, sales_lead_delta)) + geom_point() + stat_smooth()
 ```
