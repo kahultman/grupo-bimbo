@@ -103,9 +103,12 @@ plot2 <- ggplot(sampled, aes(log(returns_units), sales_lead_delta)) +
 
 multiplot(plot1, plot2, cols=2)
 
+setwd("~/github/grupo-bimbo/Final/")
 ```
 
 After model implementation, products should be intentionally overstocked if the product's demand is evaluated by data with no returns. 
+
+![Sample Demand Over Time](sample_time_trend.png)
 
 ## Modelling 1: Time Series
 

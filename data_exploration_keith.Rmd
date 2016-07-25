@@ -147,6 +147,8 @@ ggplot(product_trend_sample, aes(x = week, y = ave_demand)) +
   stat_smooth() +
   facet_wrap(~ product, scale = "free_y") +
   ggtitle("Average demand over time of 12 random products")
+
+ggsave("sample_time_trend.png", width = 5, height = 5)
 ```
 
 Let's look at demand for only one of those 12 products, product 5710
