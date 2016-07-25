@@ -33,14 +33,14 @@ explore <- explore %>%
          demand_lead_delta = lead(demand) - demand,
          had_return = lag(has_return))
 
-
+explore$had_return <- as.logical(explore$had_return)
 explore[is.na(explore)] <- 0
 
 summary(explore$sales_lead_delta)
 
 sum(explore$has_return) 
 sum(explore$has_return) / length(explore$has_return)
-  
+ 
 save(explore, file = "explore.Rdata")
 load("explore.Rdata")
 set.seed(0928645)
@@ -51,19 +51,20 @@ save(sampled, file = "sampled_returns.Rdata")
 ```{r}
 load("sampled_returns.Rdata")
 
-ggplot(sampled, aes(x=has_return, y= sales_lead_delta)) + geom_boxplot()
-ggplot(sampled, aes(x=has_return, y= demand)) + geom_boxplot()
+ggplot(sampled, aes(x=had_return, y= sales_delta)) + geom_boxplot() 
+ggplot(sampled, aes(x=had_return, y= returns_units)) + geom_boxplot()
 median(sampled$returns_units[sampled$has_return == TRUE])
-median(sampled$returns_units[sampled$has_return == FALSE])
+median(sampled$returns_units[sampled$had_return == TRUE])
+median(sampled$returns_units[sampled$had_return == FALSE])
 
 ggplot(sampled, aes(log(returns_units), sales_lead_delta)) + 
   geom_point() + 
   stat_smooth() +
   ggtitle("Effect of number of returns from previous week on following weeks sales") +
   ylab("Change in Sales") +
-  xlab("Number of units returned (Log scale)")
+  xlab("Number of units returned (Log scale)") 
 
-ggplot(sampled, aes(log(returns_units), demand)) + 
+ggplot(sampled, aes(log(returns_units), demand_lead_delta)) + 
   geom_point() + 
   stat_smooth() +
   ggtitle("Effect of number of returns from previous week on following weeks demand") +

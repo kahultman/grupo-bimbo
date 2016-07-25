@@ -6,6 +6,7 @@ date: "`r Sys.Date()`"
 output:
   html_document:
     toc: TRUE
+    
 ---
 
 ```{r setup, include=FALSE}
@@ -65,13 +66,32 @@ Our client, Grupo Bimbo, wants to develop a model to accurately forecast invento
 Grupo Bimbo supplied 9 weeks of historical data that includes store and product ID, sales, returns, and demand by week. 
   The target variable is ‘Adjusted Demand’, which will be an integer representing the demand of a product, in units. 
   Each model will be evaluated for accuracy using the Root Mean Squared Logarithmic Error (RMSLE). This measure for estimating error will penalize models that under-predict more than a model that over-predicts. 
+
+$$\epsilon = \sqrt{\frac{1}{n} \sum_{i=1}^{n} \big(log(p_i + 1)-log(a_i + 1)\big)^2}$$
+
+Where:
+
+$\epsilon$ is the RMSLE value (score)
+
+$n$ is the total number of observations in the data set,
+
+$p_i$ is the prediction of demand
+
+$a_i$ is the actual demand for $i$
+
+$log(x)$ is the natural logarithm of $x$
+
+  
   Another limitation of this data set is that demand is approximated by subtracting the supply from the following week's return of inventory. This would naturally allow for an accurate estimate of demand when supply is higher than demand, but would not accurately estimate demand in cases where the product is under-supplied. 
   Using RMSLE helps with this in some ways by having a greater cost for under estimated demand than over estimated demand. However, this alone would not guarentee accurate model evaluation with true demand. 
 
 
+
 ### Data Science Plan and Process
 
-Our team of data scientists will be using the CRISP method of data science. ![CRISP](crisp_model.png) 
+![CRISP](crisp_model_4by4.png) 
+
+Our team of data scientists will be using the CRISP method of data science. 
 This technical report will mirror the data science steps outlined in CRISP. We primarily used R for the visualization and modeling processes. Version control and collaboration was done by using a [github repository](https://github.com/kahultman/grupo-bimbo), and our code is available there. Communication between group members was primarily using Slack and a weekly Google Hangouts video conference. 
 
 
@@ -84,7 +104,7 @@ During the initial data exploration step, each of us independently explored the 
 
 Since our project was based off of a Kaggle competition, it is worth pointing out how the competition rules shaped and limited our approach to the project. If our project were a real-world situation, our model would be deployed to predict demand for Grupo Bimbo's products and we would be able to evaluate how well our predicted demand matched the actual demand for the products based on the number of returns the company observed following deployment. For example if our model predicted an increase in demand for product #384 at store #1381 from 15 units to 20 units, Grupo Bimbo would increase the sales to that store and record the number of returned units the following week. However, since both the train and the test data sets are historical, the actual recorded demand is based off of sales without deploying our model. In other words, the cake is already baked and the record for demand is actually based in part on the current human model of demand.  
 
-Only 3% of weekly product sales involve any returned products. If the human model is responsive to these returns we expect to see a drop in the following week's deliveries. However, it looks like the human model is not responsive to a product with returns or the number of returned units. 
+Only 3% of weekly product sales involve any returned products. If the human model is responsive to these returns we expect to see a drop in the following week's deliveries. However, as Figure 1A and 1B show, it looks like the human model is not responsive to a product with returns or the number of returned units. We consider this beneficial for our purposes because we can estimate actual demand rather than attempt to predict the behavior of the current human model. There is an effect on actual demand however (Fig 1C, 1D), so there is a small benefit to be gained by incorporating returns within our models. 
 
 ```{r Responsiveness of Human model, echo=FALSE, message=TRUE, warning=FALSE}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
@@ -92,27 +112,40 @@ load("sampled_returns.Rdata")
 
 plot1 <- ggplot(sampled, aes(x=has_return, y= sales_lead_delta)) + 
   geom_boxplot() + 
-  ggtitle("Comparison of product with and \n without returns on following \n week's supply") +
+  ggtitle("A) Comparison of product with and \n without returns on following \n week's supply") +
   ylab("Change in Sales (week x+1 - week x)") +
-  xlab("Week x has return")
+  xlab("Previous week had return")
 
 plot2 <- ggplot(sampled, aes(log(returns_units), sales_lead_delta)) + 
   geom_point() + 
   stat_smooth() +
-  ggtitle("Effect of number of returns from \n previous week on following \n weeks supply") +
-  ylab("Change in Sales (week x+1 - week x)") +
-  xlab("Number of units returned \n during week x (Log scale)")
+  ggtitle("B) Effect of number of returns from \n previous week on following \n weeks supply") +
+  ylab("Change in Sales") +
+  xlab("Number of units returned \n in previous week (Log scale)")
 
-multiplot(plot1, plot2, cols=2)
+plot3 <- ggplot(sampled, aes(x=had_return, y= demand)) + 
+  geom_boxplot() + 
+  ggtitle("C) Comparison of product with and \n without returns on following \n week's demand") +
+  ylab("Change in Demand") +
+  xlab("Previous week had return")
+
+plot4 <- ggplot(sampled, aes(log(returns_units), demand_lead_delta)) + 
+  geom_point() + 
+  stat_smooth() +
+  ggtitle("D) Effect of number of returns from \n previous week on following \n weeks demand") +
+  ylab("Change in Demand") +
+  xlab("Number of units returned \n in previous week (Log scale)")
+
+multiplot(plot1, plot2, plot3, plot4, cols=2)
 
 setwd("~/github/grupo-bimbo/Final/")
 ```
 
-We consider this beneficial for our model because we can estimate actual demand rather than predict effects from the current human model. 
+
 
 After model implementation, products should be intentionally overstocked if the product's demand is evaluated by data with no returns. 
 
-![Sample Demand Over Time](sample_time_trend.png)
+![Sample Demand Over Time](sample_time_trend_6by6.png)
 
 ## Modelling 1: Time Series
 
@@ -138,7 +171,6 @@ RMSLE score of 0.50922
 
 
 ### Conditional Linear Regression of Means
-
 
 
 Demand ~ \mu {PCD} + \mu {PR}
