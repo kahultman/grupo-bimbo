@@ -9,9 +9,11 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-library(tufte)
 library(dplyr)
+library(grid)
 library(ggplot2)
+setwd("~/github/grupo-bimbo/Final/")
+source("base_scripts.R")
 # invalidate cache when the tufte version changes
 #knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
 #options(htmltools.dir.version = FALSE)
@@ -82,19 +84,25 @@ During the initial data exploration step, each of us independently explored the 
 
 Since our project was based off of a Kaggle competition, it is worth pointing out how the competition rules shaped and limited our approach to the project. If our project were a real-world situation, our model would be deployed to predict demand for Grupo Bimbo's products and we would be able to evaluate how well our predicted demand matched the actual demand for the products based on the number of returns the company observed following deployment. For example if our model predicted an increase in demand for product #384 at store #1381 from 15 units to 20 units, Grupo Bimbo would increase the sales to that store and record the number of returned units the following week. However, since both the train and the test data sets are historical, the actual recorded demand is based off of sales without deploying our model. In other words, the cake is already baked and the record for demand is actually based in part on the current human model of demand.  
 
-```{r Responsiveness of Human model, echo=FALSE, message=FALSE, warning=FALSE}
+```{r Responsiveness of Human model, echo=FALSE, message=TRUE, warning=FALSE}
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
 load("sampled_returns.Rdata")
 
-ggplot(sampled, aes(x=hasreturn, y= sales_lead_delta)) + 
+plot1 <- ggplot(sampled, aes(x=hasreturn, y= sales_lead_delta)) + 
   geom_boxplot() + 
-  ggtitle("Comparison of product with and without returns on following week's supply")
+  ggtitle("Comparison of product with and \n without returns on following \n week's supply") +
+  ylab("Change in Sales (week x+1 - week x)") +
+  xlab("Week x has return")
 
-ggplot(sampled, aes(log(returns_units), sales_lead_delta)) + 
+plot2 <- ggplot(sampled, aes(log(returns_units), sales_lead_delta)) + 
   geom_point() + 
   stat_smooth() +
-  ggtitle("Effect of number of returns from previous week on following weeks supply") +
-  ylab("Change in Sales") +
-  xlab("Number of units returned (Log scale)")
+  ggtitle("Effect of number of returns from \n previous week on following \n weeks supply") +
+  ylab("Change in Sales (week x+1 - week x)") +
+  xlab("Number of units returned \n during week x (Log scale)")
+
+multiplot(plot1, plot2, cols=2)
+
 ```
 
 After model implementation, products should be intentionally overstocked if the product's demand is evaluated by data with no returns. 
@@ -110,15 +118,6 @@ After model implementation, products should be intentionally overstocked if the 
 ## Feature Engineering
 
 ## Modelling 3: XGBoost
-
-
-
-```{r}
-setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
-#load("train1.Rdata")
-
-
-```
 
 Suggestions to Grupo Bimbo for further 
 
