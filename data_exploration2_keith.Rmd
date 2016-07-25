@@ -9,31 +9,21 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(tidyr)
-library(data.table)
-library(feather)
 library(ggplot2)
 ```
 # Load Data
 
 ```{r}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
-load("train1.Rdata")
 load("train2.Rdata")
-load("validate.Rdata")
-load("test.Rdata")
-load("clients.Rdata")
-load("products.Rdata")
-load("town_state.Rdata")
 ```
-
-
 
 ## Is current human model under estimating demand?
 
 ```{r}
 wks <- unique(train2$week)
-wks <- data.table(wks)
-train2 <- data.table(train2)
+#wks <- data.table(wks)
+#train2 <- data.table(train2)
 
 
 # From Carolyn, merge all possible weeks to data frame. 
@@ -64,15 +54,28 @@ combinations2 <- mutate(combinations2, hasreturn = (returns_units > 0))
 
 combinations2[is.na(combinations2)] <- 0
 summary(combinations2$sales_lead_delta)
-
 sum(combinations2$returns_units > 0) / length(combinations2$returns_units)
-  
-prev_returned <- combinations2 %>% filter(prev_return > 0)
-prev_notreturn <- combinations2 %>% filter(prev_return = 0)
+ 
+save(explore, file = "explore.Rdata")
+set.seed(0928645)
+sampled <- sample_frac(explore, 0.1, replace = FALSE)
+save(sampled, file = "sampled_returns.Rdata")
+```
 
-colnames(combinations)  
+```{r}
+load("sampled_returns.Rdata")
 
-ggplot(combinations2, aes(x=hasreturn, y= sales_lead_delta)) + geom_boxplot()
+ggplot(sampled, aes(x=hasreturn, y= sales_lead_delta)) + geom_boxplot()
+
+ggplot(sampled, aes(log(returns_units), sales_lead_delta)) + 
+  geom_point() + 
+  stat_smooth() +
+  ggtitle("Effect of number of returns from previous week on following weeks sales") +
+  ylab("Change in Sales") +
+  xlab("Number of units returned (Log scale)")
+
+#ggplot(explore, aes(returns_units, sales_lead_delta)) + geom_point() + stat_smooth()
+```
 
 
 
