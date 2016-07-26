@@ -182,6 +182,12 @@ RMSLE score of 0.48943
 
 ## Feature Engineering
 
+Feature engineering was very important in extracting new fields for improving the model. We were able to extract the below features from the given data sets.
+
+1. Product Brand
+2. Product Weight
+3. Product number of pieces
+
 ## Modelling 3: XGBoost
 
 Suggestions to Grupo Bimbo for further 
