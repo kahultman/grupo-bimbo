@@ -63,7 +63,22 @@ Our client, Grupo Bimbo, wants to develop a model to accurately forecast invento
 
 ### Description of data and competition rules
 
-Grupo Bimbo supplied 9 weeks of historical data that includes store and product ID, sales, returns, and demand by week. 
+Grupo Bimbo supplied 9 weeks of historical data in a 3.2Gb csv file with 74,180,464 weekly observations for each product delivery. The features in the training data set, and the features available in the test set are detailed below.  
+
+|Field|Original name |Description|In test set
+|----------------|------------|-----------------------|---------|
+|week |Semana|Week number (3-9)|+|
+|depot |Agencia_ID|Sales Depot ID|+
+|channel |Canal_ID|Sales Channel ID|+
+|route |Ruta_SAK|Route ID (Several routes / Sales Depot)|+
+|client |Cliente_ID|Client or Store ID|+
+|product |Producto_ID|Product ID|+
+|sales_units |Venta_uni_hoy|Sales units this week|
+|sales |Venta_hoy|Sales this week (pesos)|
+|returns_units |Dev_uni_proxima|Returns units next week|
+|returns |Dev_proxima|Returns next week (pesos)|
+|demand|Demanda_uni_equil|Adjusted Demand (sales_units - returns_units)|
+
   The target variable is ‘Adjusted Demand’, which will be an integer representing the demand of a product, in units. 
   Each model will be evaluated for accuracy using the Root Mean Squared Logarithmic Error (RMSLE). This measure for estimating error will penalize models that under-predict more than a model that over-predicts. 
 
