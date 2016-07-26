@@ -64,6 +64,8 @@ ggplot(sampled, aes(log(returns_units), sales_lead_delta)) +
   ylab("Change in Sales") +
   xlab("Number of units returned (Log scale)") 
 
+ggplot(sampled, aes(x=had_return, y= demand)) + geom_boxplot()
+
 ggplot(sampled, aes(log(returns_units), demand_lead_delta)) + 
   geom_point() + 
   stat_smooth() +
