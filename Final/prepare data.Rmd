@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 #install.packages("dplyr")
+rm(list=ls())
 library(dplyr)
 library(data.table)
 #library(feather)
@@ -27,11 +28,16 @@ setwd("D:/r/wd/bimbo/data/source")
 ```
 
 ## Process the data to add new features
-## Below are the Functions used.
-- brand_list function : This function will split extarct the brand name from each product name
-- extract_token function : This function will extract a regular expression keyword from the character string(product name)
-- extract_weight function : This function will extract weight of the product from the product name vector
-- extract_pieces function :  This function will extract number of pieces in a product from the product name
+> Below are the Functions used. 
+
+1. brand_list function
+  + This function will split extarct the brand name from each product name
+2. extract_token function
+  + This function will extract a regular expression keyword from the character string(product name)
+3.  extract_weight function
+  + This function will extract weight of the product from the product name vector
+4.  extract_pieces function
+  + This function will extract number of pieces in a product from the product name
 
 ```{r}
 brand_list <- function(x) {
@@ -62,3 +68,59 @@ extract_pieces <- function(product_name) {
 }
 
 ```
+
+# Load the data
+
+```{r}
+
+load("train.Rdata")
+load("test.Rdata")
+load("products.Rdata")
+load("town_state.Rdata")
+
+```
+
+# extract brand, weight and pieces
+
+```{r}
+
+products$product_name <- as.character(products$product_name)
+products$brands <- unlist(lapply(products$product_name, brand_list))
+
+# delete the header
+products <- products[-c(products$brands == "IDENTIFICADO"),]
+
+products$weight <- unlist(lapply(products$product_name, extract_weight))
+products$pieces <- unlist(lapply(products$product_name, extract_pieces))
+products$product_name <- NULL
+
+products[1:10,]
+dim(products)
+
+```
+
+# Add the extracted features into the training and test data sets using left join
+
+```{r}
+
+train <-  train %>%
+  left_join(products, by="product")
+
+test$product <- as.integer(test$product)
+
+test <-  test %>%
+  left_join(products, by="product")
+
+
+```
+
+# Save Tran and test Data sets
+
+```{r}
+save(train, file="trainx.Rdata")
+save(test, file="testx.Rdata")
+
+
+
+```
+
