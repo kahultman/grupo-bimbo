@@ -47,3 +47,11 @@ prepare_data <- function(x){
   
   return(final_data2)
 }
+
+# Add features
+# 
+# Weight
+# pieces
+# Weight/piece
+# Brand
+# 
