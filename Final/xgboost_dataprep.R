@@ -55,3 +55,16 @@ prepare_data <- function(x){
 # Weight/piece
 # Brand
 # 
+
+client_name <- function(client.df){
+  library(dplyr)
+  library(tidyr)
+  library(tm)
+  
+  ?Corpus
+  ?tm_map
+  clients %>% separate(client_name, into = c("name1", "name2", "name3", "name4", "name5", "name6"), sep = " ", extra = "warn", fill="left")
+  head(clients)
+  corp <- Corpus(VectorSource(clients$client_name))
+  
+}
