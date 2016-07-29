@@ -48,11 +48,26 @@ freq
 length(freq)
 ord <- order(freq, decreasing = TRUE)
 ord
-freq[head(ord, 50)]
+name100 <- freq[head(ord, 100)]
+str(name100)
 freq[tail(ord)]
 head(table(freq), 20)
 plot(table(freq))
 
+library(stringr)
+?colSums
+sapply(client$client_name, str_detect(x, as.character(topname)))
+
+topnames <- names(name100)
+
+clients$client_name <- sapply(clients$client_name, tolower)
+
+clients %>% mutate(test = str_detect(client_name, topnames[3]))
+
+str_detect(clients$client_name, topnames[1]) 
 
 
+as.character(clients$client_name[2])
 
+clients2 <- clients
+colnames(clients2) <- c("client", "client_name", topnames)
