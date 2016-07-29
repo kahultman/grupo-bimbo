@@ -77,5 +77,42 @@ ggplot(sampled, aes(log(returns_units), demand_lead_delta)) +
 #ggplot(explore, aes(returns_units, sales_lead_delta)) + geom_point() + stat_smooth()
 ```
 
+This is for Tech report
+
+```{r Responsiveness of Human model, echo=FALSE, message=TRUE, warning=FALSE}
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+load("sampled_returns.Rdata")
+
+plot1 <- ggplot(sampled, aes(x=has_return, y= sales_lead_delta)) + 
+  geom_boxplot() + 
+  ggtitle("A) Comparison of product with and \n without returns on following \n week's supply") +
+  ylab("Change in Sales (week x+1 - week x)") +
+  xlab("Previous week had return")
+
+plot2 <- ggplot(sampled, aes(log(returns_units), sales_lead_delta)) + 
+  geom_point() + 
+  stat_smooth() +
+  ggtitle("B) Effect of number of returns from \n previous week on following \n weeks supply") +
+  ylab("Change in Sales") +
+  xlab("Number of units returned \n in previous week (Log scale)")
+
+plot3 <- ggplot(sampled, aes(x=had_return, y= demand)) + 
+  geom_boxplot() + 
+  ggtitle("C) Comparison of product with and \n without returns on following \n week's demand") +
+  ylab("Change in Demand") +
+  xlab("Previous week had return")
+
+plot4 <- ggplot(sampled, aes(log(returns_units), demand_lead_delta)) + 
+  geom_point() + 
+  stat_smooth() +
+  ggtitle("D) Effect of number of returns from \n previous week on following \n weeks demand") +
+  ylab("Change in Demand") +
+  xlab("Number of units returned \n in previous week (Log scale)")
+
+multiplot(plot1, plot2, plot3, plot4, cols=2)
+
+setwd("~/github/grupo-bimbo/Final/")
+```
+
 
 

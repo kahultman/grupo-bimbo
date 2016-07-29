@@ -1,0 +1,65 @@
+---
+title: "Baseline Model"
+author: "Keith Hultman"
+date: "June 12, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+```
+
+```{r}
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+load("train1.Rdata")
+load("test.Rdata")
+```
+
+```{r}
+
+# Grab latest week data
+train_last_week <- train1 %>% 
+  filter(week >= 9) %>% 
+  transmute(client, product, prediction = demand)
+
+# For every product/client combo, have one prediction. Sum the predictions for duplicates in training data (these are multiple delivery routes to the same store)
+train_last_week2 <- train_last_week %>% 
+  group_by(client, product) %>% 
+  summarise(prediction = sum(prediction))
+
+```
+
+
+```{r}
+
+# Identify the number of 'rows' in the test set for product/client pairs
+test2 <- test %>%
+  group_by(client, product) %>% 
+  summarise(number = n())
+
+# This shows the distribution of multiples for each product/client pair
+table(test2$number)
+
+# First join will put number of duplicate items in each row of the test set.
+test <- left_join(test, test2, by = c("client", "product"))
+# Next we'll put the predictions in. 
+test <- left_join(test, train_last_week2, by = c("client", "product"))
+# Divide the predicted value by the number of instances for each client/product
+test$prediction <- test$prediction / test$number
+# Where there isn't a prediction, make it the overall median demand
+test$prediction[is.na(test$prediction)] <- median(train1$demand)
+test$prediction_round <- round(test$prediction, 0)
+test$prediction_ceiling <- ceiling(test$prediction)
+
+save(test, file = "baseline_predictions_full.Rdata")
+
+```
+
+```{r submission file}
+
+submit_baseline <- test %>% select(id, prediction) %>% arrange(id)
+colnames(submit_baseline) <- c("id", "Demanda_uni_equil")
+write.csv(submit_baseline, file = "submit_baseline.csv", row.names = FALSE)
+```
+

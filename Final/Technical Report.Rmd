@@ -64,7 +64,7 @@ $log(x)$ is the natural logarithm of $x$
 
 ### Data Science Plan and Process
 
-![CRISP](crisp_model_4by4.png) 
+![CRISP](figures/crisp_model_4by4.png) 
 
 Our team of data scientists will be using the CRISP method of data science. 
 This technical report will mirror the data science steps outlined in CRISP. We primarily used R for the visualization and modeling processes. Version control and collaboration was done by using a [github repository](https://github.com/kahultman/grupo-bimbo), and our code is available there. Communication between group members was primarily using Slack and a weekly Google Hangouts video conference. 
@@ -74,10 +74,7 @@ This technical report will mirror the data science steps outlined in CRISP. We p
 
 During the initial data exploration step, each of us independently explored the data using summary statistics and visualizations. 
 
-```{r}
-
-```
-
+![By State](figures/states.png)
 
 ### Goals for the Kaggle competition versus actual client work
 
@@ -85,46 +82,15 @@ Since our project was based off of a Kaggle competition, it is worth pointing ou
 
 Only 3% of weekly product sales involve any returned products. If the human model is responsive to these returns we expect to see a drop in the following week's deliveries. However, as Figure 1A and 1B show, it looks like the human model is not responsive to a product with returns or the number of returned units. We consider this beneficial for our purposes because we can estimate actual demand rather than attempt to predict the behavior of the current human model. There is an effect on actual demand however (Fig 1C, 1D), so there is a small benefit to be gained by incorporating returns within our models. 
 
-```{r Responsiveness of Human model, eval=FALSE, message=TRUE, warning=FALSE, include=FALSE}
-setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
-load("sampled_returns.Rdata")
+![Returns Effect](figures/returns.png)
 
-plot1 <- ggplot(sampled, aes(x=has_return, y= sales_lead_delta)) + 
-  geom_boxplot() + 
-  ggtitle("A) Comparison of product with and \n without returns on following \n week's supply") +
-  ylab("Change in Sales (week x+1 - week x)") +
-  xlab("Previous week had return")
+After model implementation, products should be intentionally overstocked if the product's demand is evaluated by data with no returns. We also noticed that returns were possibly a result of particular depots over estimating demand. 
 
-plot2 <- ggplot(sampled, aes(log(returns_units), sales_lead_delta)) + 
-  geom_point() + 
-  stat_smooth() +
-  ggtitle("B) Effect of number of returns from \n previous week on following \n weeks supply") +
-  ylab("Change in Sales") +
-  xlab("Number of units returned \n in previous week (Log scale)")
-
-plot3 <- ggplot(sampled, aes(x=had_return, y= demand)) + 
-  geom_boxplot() + 
-  ggtitle("C) Comparison of product with and \n without returns on following \n week's demand") +
-  ylab("Change in Demand") +
-  xlab("Previous week had return")
-
-plot4 <- ggplot(sampled, aes(log(returns_units), demand_lead_delta)) + 
-  geom_point() + 
-  stat_smooth() +
-  ggtitle("D) Effect of number of returns from \n previous week on following \n weeks demand") +
-  ylab("Change in Demand") +
-  xlab("Number of units returned \n in previous week (Log scale)")
-
-multiplot(plot1, plot2, plot3, plot4, cols=2)
-
-setwd("~/github/grupo-bimbo/Final/")
-```
+![Depot Returns](figures/depotreturn.png)
 
 
 
-After model implementation, products should be intentionally overstocked if the product's demand is evaluated by data with no returns. 
 
-![Sample Demand Over Time](sample_time_trend_6by6.png)
 
 ## Modelling 1: Persistant Baseline Model
 
@@ -132,25 +98,30 @@ Before implementing various machine learning methods we created a baseline model
 
 Persistant Baseline Model: Demand(week^x^) = Demand(week^x-1^)
 
-RMSLE: 
+RMSLE: 0.63813
 
 ## Data Exploration 2
 
-```{r}
-
-```
 
 
 ## Modelling 2: Conditional Medians
 
-### Conditional Means 1
+Our initial thought was to interpret the data as a time series. The first problem with this was the short time period did not allow for seasonality determination. While there might be some trends in the change of demand over these short weeks, given the lack of response to demand from the current human model, most of the changes over this short time period is likely to be error rather than true trend. Thus, our first model to improve the baseline will aggregate demand across all time points for each feature in the model. 
+
+![Sample Demand Over Time](figures/sample_time_trend_6by6.png)
+
+The first model is really not a model in the traditional sense. This model will simply take the median demand for particular attribute combinations and use that to predict future demand for those attribute combinations. The first model predicts demand by taking the median demand for each product-client pair. For instances where the product-client pair is in the test set but not available in the training set (such as instances where a client first orders a product during the test weeks) we predict demand by the median demand for that product at other clients. In the case where there is a new product we predict demand by the overall median demand for all products. 
+
+### Conditional Medians 1
 1. Demand = median {PC}
 2. Demand = median {P}
 3. Demand = median all products
 
 RMSLE score of 0.50941
 
-### Conditional Means 2
+The above model is specific to each store and product, however, one client may receive deliveries from more than one shipping depot. The second Conditional Medians model is even more specific for its first prediction, and predicts demand for each product-client-depot instance. This specificity is at the finest grain of the data set, there is only one instance for each week in this grouping. 
+
+### Conditional Medians 2
 1. Demand = median {PCD}
 2. Demand = median {PC}
 3. Demand = median {P}
@@ -158,10 +129,11 @@ RMSLE score of 0.50941
 
 RMSLE score of 0.50922
 
+This specificity improves the overall RMSLE score slightly. This improvement likely improves predictions for the larger clients and allows particular depots to predict demand they are responsible for delivering.
 
 ### CLRM: Conditional Linear Regression of Means
 
-Our next model is a more complex version of the conditional medians model with two major additional changes. The first is that for the most specific cases where product, client, and depot are all a match, we implement a linear regression model that includes a component for that specific case as well as for the more general case of product and route. The second modification involves transforming our target variable from demand to the logarithm of demand plus 1. 
+Our next model is a more complex version of the conditional medians model with two major additional changes. The first is that for the most specific cases where product, client, and depot are all a match, we implement a linear regression model that includes a component for the specific case as well as for the more general case of product and route. The second modification involves transforming our target variable from demand to the logarithm of demand plus 1. 
 
 
 1. $log(Demand)$ = 0.9994$log(\mu{PCD})$ + 1.094e-03$log(\mu{PR})$ - 7.672e-04 
@@ -171,9 +143,11 @@ Our next model is a more complex version of the conditional medians model with t
 
 RMSLE score of 0.48943
 
+This model improves our evaluation metric substantially and brings us below 0.5 on the RMSLE score. 
+
 ## Feature Engineering
 
-Feature engineering was very important in extracting new fields for improving the model. We were able to extract the below features from the given data sets.
+Thus far we have been creating models with features available from the raw data set. In order to gain additional information, we next considered feature engineering to define new fields. We were able to extract the below features from the given data sets.
 
 1. Product Brand
 2. Product Weight
@@ -181,7 +155,9 @@ Feature engineering was very important in extracting new fields for improving th
 
 ## Modelling 3: XGBoost
 
-Suggestions to Grupo Bimbo for further data mining value
+
+
+## Suggestions to Grupo Bimbo for further data mining value
 
 * Better Data Collection
 * Clustering on products - Currently if a new product is in the test set, we have to use the overall product average in the CLRM model. If we had products clustered by product attributes and similar demand patterns, we could improve predictions for newly released products. 
