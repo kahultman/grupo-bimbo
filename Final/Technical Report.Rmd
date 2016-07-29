@@ -15,46 +15,9 @@ library(grid)
 library(ggplot2)
 setwd("~/github/grupo-bimbo/Final/")
 source("base_scripts.R")
-# invalidate cache when the tufte version changes
-#knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
-#options(htmltools.dir.version = FALSE)
 ```
 
 # Grupo Bimbo Technical Report
-
-## Outline
-- Overview of Project
-    - Project Goal
-    - Description of data available
-    - Baseline Model
-    - RMSLE: 
-  
-- Data Exploration 1
-    - Time trends
-    - 
-- Modelling 1: Time Series
-    - Demand ~ Week, for each Product/Client/Depot
-    - RMSLE:
-- Data Exploration 2
-    - Time factor is primarily noise - focus on non-time factors
-    -
-- Modelling 2: Conditional Means
-    - Mean vs Median vs Mean(log+1)
-    - Conditional means
-    - RMSLE:
-    - CLRM - Conditional Linear Regression of Means
-    - RMSLE:
-  
-- Feature engineering
-    - Brand
-    - Weight
-    - Lag
-    - 
-- Modelling 3: XGBoost
-
-- Ensemble of CLRM and XGBoost
-
-- Implementation of final Grupo Bimbo Demand Prediction model
 
 ## Project Overview
 
@@ -97,10 +60,7 @@ $a_i$ is the actual demand for $i$
 $log(x)$ is the natural logarithm of $x$
 
   
-  Another limitation of this data set is that demand is approximated by subtracting the supply from the following week's return of inventory. This would naturally allow for an accurate estimate of demand when supply is higher than demand, but would not accurately estimate demand in cases where the product is under-supplied. 
-  Using RMSLE helps with this in some ways by having a greater cost for under estimated demand than over estimated demand. However, this alone would not guarentee accurate model evaluation with true demand. 
-
-
+  Another limitation of this data set is that demand is approximated by subtracting the supply from the following week's return of inventory. This would naturally allow for an accurate estimate of demand when supply is higher than demand, but would not accurately estimate demand in cases where the product is under-supplied. Using RMSLE helps with this in some ways by having a greater cost for under-estimated demand than over-estimated demand. However, this alone would not guarentee accurate model evaluation with true demand. 
 
 ### Data Science Plan and Process
 
@@ -110,10 +70,14 @@ Our team of data scientists will be using the CRISP method of data science.
 This technical report will mirror the data science steps outlined in CRISP. We primarily used R for the visualization and modeling processes. Version control and collaboration was done by using a [github repository](https://github.com/kahultman/grupo-bimbo), and our code is available there. Communication between group members was primarily using Slack and a weekly Google Hangouts video conference. 
 
 
-
 ## Data Exploration 1
 
 During the initial data exploration step, each of us independently explored the data using summary statistics and visualizations. 
+
+```{r}
+
+```
+
 
 ### Goals for the Kaggle competition versus actual client work
 
@@ -121,7 +85,7 @@ Since our project was based off of a Kaggle competition, it is worth pointing ou
 
 Only 3% of weekly product sales involve any returned products. If the human model is responsive to these returns we expect to see a drop in the following week's deliveries. However, as Figure 1A and 1B show, it looks like the human model is not responsive to a product with returns or the number of returned units. We consider this beneficial for our purposes because we can estimate actual demand rather than attempt to predict the behavior of the current human model. There is an effect on actual demand however (Fig 1C, 1D), so there is a small benefit to be gained by incorporating returns within our models. 
 
-```{r Responsiveness of Human model, echo=FALSE, message=TRUE, warning=FALSE}
+```{r Responsiveness of Human model, eval=FALSE, message=TRUE, warning=FALSE, include=FALSE}
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
 load("sampled_returns.Rdata")
 
@@ -162,36 +126,48 @@ After model implementation, products should be intentionally overstocked if the 
 
 ![Sample Demand Over Time](sample_time_trend_6by6.png)
 
-## Modelling 1: Time Series
+## Modelling 1: Persistant Baseline Model
 
+Before implementing various machine learning methods we created a baseline model designed to predict demand based on minimal data and simulating the description of the human model currently in place at Grupo Bimbo. In this model, demand is assumed to remain unchanged from the previous week. In the case where a product/client combination is new or there is a newly released product, demand is predicted to be the overall mean demand.
+
+Persistant Baseline Model: Demand(week^x^) = Demand(week^x-1^)
+
+RMSLE: 
 
 ## Data Exploration 2
 
+```{r}
+
+```
 
 
 ## Modelling 2: Conditional Medians
 
-Demand = median {PC}
-Demand = median {P}
-Demand = median all products
+### Conditional Means 1
+1. Demand = median {PC}
+2. Demand = median {P}
+3. Demand = median all products
 
 RMSLE score of 0.50941
 
-Demand = median {PCD}
-Demand = median {PC}
-Demand = median {P}
-Demand = median all products
+### Conditional Means 2
+1. Demand = median {PCD}
+2. Demand = median {PC}
+3. Demand = median {P}
+4. Demand = median all products
 
 RMSLE score of 0.50922
 
 
-### Conditional Linear Regression of Means
+### CLRM: Conditional Linear Regression of Means
+
+Our next model is a more complex version of the conditional medians model with two major additional changes. The first is that for the most specific cases where product, client, and depot are all a match, we implement a linear regression model that includes a component for that specific case as well as for the more general case of product and route. The second modification involves transforming our target variable from demand to the logarithm of demand plus 1. 
 
 
-Demand ~ \mu {PCD} + \mu {PR}
-Demand ~ \mu {PR}
-Demand ~ \mu {P}
-Demand ~ \mu all products
+1. $log(Demand)$ = 0.9994$log(\mu{PCD})$ + 1.094e-03$log(\mu{PR})$ - 7.672e-04 
+2. $log(Demand)$ = $log(\mu{PR})$ - 6.153e-13$log(\mu{P})$ + 6.785e-10
+3. $log(Demand)$ = $log(\mu{P})$
+4. $log(Demand)$ = $log(\mu{all})$
 
 RMSLE score of 0.48943
 
@@ -205,6 +181,7 @@ Feature engineering was very important in extracting new fields for improving th
 
 ## Modelling 3: XGBoost
 
-Suggestions to Grupo Bimbo for further 
+Suggestions to Grupo Bimbo for further data mining value
 
 * Better Data Collection
+* Clustering on products - Currently if a new product is in the test set, we have to use the overall product average in the CLRM model. If we had products clustered by product attributes and similar demand patterns, we could improve predictions for newly released products. 
