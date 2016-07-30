@@ -5,18 +5,12 @@ library(arules)
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
 load("train1.Rdata")
 load("products.Rdata")
-load("clients.Rdata")
-
-
-head(clients)
-head(train1)
 
 
 # Start with a small subset of the data
 
-train1$client <- as.numeric(train1$client)
-train_sub <- filter(train1, client >= 326305 )
-train_sub$client <- as.factor(train_sub$client)
+
+train_sub <- filter(train1, week >= 9)
 train_sub$product <- as.character(train_sub$product)
 
 train_sub
@@ -27,28 +21,43 @@ trans <- train_sub %>%
 
 basket <- trans$basket
 
-transactionfile <- file("transactions.txt")
+transactionfile <- file("transactions9.txt")
 writeLines(unlist(lapply(basket, paste, collapse=" ")), con = transactionfile)
 close(transactionfile)
 
 #write(trans, file = "transactions.txt", sep = ",")
 
-basket <- read.transactions("transactions.txt", format = "basket", sep = " ", rm.duplicates = TRUE)
+basket <- read.transactions("transactions9.txt", format = "basket", sep = " ", rm.duplicates = TRUE)
 
 summary(basket)
 inspect(basket[1:5])
 
-popular <- filter(products, product %in% c(1278, 1240, 1242, 1284, 1250, 384, 345, 329, 302, 300, 9640))
+popular <- filter(products, product %in% c(1240, 1242, 2233, 1250, 1284))
 
-# do full dataset
+s <- basket[,itemFrequency(basket)>0.05]
+basket_jac <- dissimilarity(s, which = "transactions")
+plot(hclust(basket_jac, method = "ward"))
 
-trans2 <- train1 %>% 
-  group_by(client, week) %>% 
-  summarise(basket = list(product))
 
-transactionfile <- file("transactions2.txt")
-writeLines(unlist(lapply(trans2$basket, paste, collapse=" ")), con = transactionfile)
-close(transactionfile)
+# combine test and train
 
-basket2 <- read.transactions("transactions2.txt", format = "basket", sep = " ", rm.duplicates = TRUE)
+setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
+load("train1.Rdata")
+load("test.Rdata")
 
+colnames(test)
+colnames(train1)
+
+library(dplyr)
+
+train1 <- mutate(train1, id = NA)
+test <- mutate(test, demand = NA)
+train1$sales_units <- NULL
+train1$sales <- NULL
+train1$returns <- NULL
+train1$returns_units <- NULL
+
+combined <- rbind(test, train1)
+str(combined)
+
+source("Add_Lag_keith.R")
