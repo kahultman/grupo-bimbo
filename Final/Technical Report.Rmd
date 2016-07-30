@@ -150,8 +150,13 @@ This model improves our evaluation metric substantially and brings us below 0.5 
 Thus far we have been creating models with features available from the raw data set. In order to gain additional information, we next considered feature engineering to define new fields. We were able to extract the below features from the given data sets.
 
 1. Product Brand
+We were able to extract product brand from product's name. There were 33 brands in total. The extracted brands vector was then merged into the train and test as an addition feature. Since its a categorical variable we had to convert it into numeric feature to be used for xgboost. One of the possibilities we considered was to do a "one-hot encoding" by creating a sparse matrix from the brand vector so that it can be fed to the xgboost training set. 
+
 2. Product Weight
+We were able to extract the product weight also similar to the product brand from the product name. Some of the weights were given in grams and some others in kilograms. Some products did not have any weight information. We standardised the weights by converting all the weight values into grams.
+
 3. Product number of pieces
+In cases where the number of pieces of product was given we extracted it and stored it as a feature.
 
 ## Modelling 3: XGBoost
 
