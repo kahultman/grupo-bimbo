@@ -155,7 +155,11 @@ Thus far we have been creating models with features available from the raw data 
 
 ## Modelling 3: XGBoost
 
+The next model we started to develop is an Extreme Gradient Boosting (XGBoost) model – which has become one of the most popular algorithms to use for Kaggle competitions.  This algorithm is a combination of both a linear model and decision tree algorithm, which supports objective functions including regression, classification, and ranking. 
 
+XGBoost only works with numeric vectors, so the biggest effort is preparing the data in order for it to run properly.  This included joining additional indicator variables to the train dataset from the other datasets provided and creating lag demand variables.  Our goal was to have the model include: demand, lag of demand, weight, pieces, and brand.
+
+The unexpected issue that we ran into was the difficulty of getting the data properly prepared; this turned into a much more difficult task than anticipated.  To turn character variables into numeric, we first tried using a spread function, which transposes the possible outputs of a character variable into individual binary variables.  Unfortunately, this command was not producing the output desired and, in turn, gave us unusable data to run the model.  With limited time, we decided to only use the already numeric variables.  With more time, our next idea was the use one hot encoding, which makes a sparse matrix using flags on every possible value of that variable.
 
 ## Suggestions to Grupo Bimbo for further data mining value
 
