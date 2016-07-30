@@ -11,11 +11,12 @@ library(dplyr)
 library(broom)
 
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
-load("train1.Rdata")
-load("test.Rdata")
+#load("train1.Rdata")
+#load("test.Rdata")
 load("train2.Rdata")
 load("validate.Rdata")
 
+# Set your train and test data sets
 train <- train2
 test  <- validate
 
@@ -59,7 +60,7 @@ mean_mod <- mean_mod %>% select(-sales_units, -sales, -returns_units, -returns)
 
 ```{r}
 
-mean_mod <- train[product_client_depot]
+#mean_mod <- train[product_client_depot]
 ```
 
 
@@ -96,11 +97,22 @@ test$pred <- round(test$pred, 3)
 
 Create submission file
 
-```{r}
+```{r submit test}
+
+test <- mutate(id = )
+
 submit_cond_mean <- test %>% select(id, pred) %>% arrange(id)
 colnames(submit_cond_mean) <- c("id", "Demanda_uni_equil")
 write.csv(submit_cond_mean, file = "submit_cond_mean.csv", row.names = FALSE)
 ```
+
+
+```{r submit validate}
+
+submit_cond_mean <- test %>% select(week, depot, channel, route, client, product, demand, pred)
+write.csv(submit_cond_mean, file = "submit_cond_mean_validate.csv", row.names = FALSE)
+```
+
 
 ## Kaggle results
 This model earned an RMSLE score of 0.48943 on the test evaluation. Current top score is 0.42927
