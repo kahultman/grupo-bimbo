@@ -90,7 +90,7 @@ Persistant Baseline Model: Demand(week^x^) = Demand(week^x-1^)
 
 RMSLE: 0.63813
 
-## Modelling 2: Conditional Medians
+## Modelling 2: Conditional Medians/Means
 
 Our initial thought was to interpret the data as a time series. The first problem with this was the short time period did not allow for seasonality determination. While there might be some trends in the change of demand over these short weeks, given the lack of response to demand from the current human model, most of the changes over this short time period is likely to be error rather than true trend. Thus, our first model to improve the baseline will aggregate demand across all time points for each feature in the model. 
 
@@ -159,8 +159,14 @@ RMSLE score of 0.6249
 
 Our final model will be an ensemble of the CLRM model and the XGBoost models. 
 
+## Model deployment 
+
+We recommend deploying an A/B test of the CLRM model. In order to evaluate the business value of our predictions, we recommend testing the model at a random sample of client stores. The remaining clients will receive product based on the current human prediction model. This low-risk test will provide a more accurate evaluation of our predictions and allow for estimation of cost savings if the CLRM model is deployed to all clients. 
+
 ## Suggestions to Grupo Bimbo for further data mining value
 
-* Longer historical records would allow for detection of seasonality and long term trends
-* Clustering on products - Currently if a new product is in the test set, we have to use the overall product average in the CLRM model. If we had products clustered by product attributes and similar demand patterns, we could improve predictions for newly released products
-* Clustering or categorization of clients - Bimbo products are sold in grocery stores, convenience stores, and used at hamburger joints and other restaurants that have different needs for product types.
+The short duration of demand records limited our selection of modeling methods. A longer historical record would allow for detection of seasonality and long term trends using time series models such as ARIMA.
+
+Creation of product cluster features. Currently, if a new product is introduced, we default to using the overall product average as an estimate for demand in the CLRM model. If we had products clustered by product attributes and similar demand patterns, we could improve predictions for newly released products.
+
+Clustering or categorization of clients. Bimbo products are sold in grocery stores, convenience stores, and used at hamburger joints and other restaurants that have different needs for product types. While the CLRM model is specific to any particular individual store, we think a store category variable would improve predictions by preventing an overestimate of demand in cases where products are unique to particular categories of clients. 
