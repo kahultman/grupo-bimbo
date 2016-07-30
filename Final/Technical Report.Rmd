@@ -156,8 +156,10 @@ XGBoost only works with numeric vectors, so the biggest effort is preparing the 
 
 The unexpected issue that we ran into was the difficulty of getting the data properly prepared; this turned into a much more difficult task than anticipated.  To turn character variables into numeric, we first tried using a spread function, which transposes the possible outputs of a character variable into individual binary variables.  Unfortunately, this command was not producing the output desired and, in turn, gave us unusable data to run the model.  With limited time, we decided to only use the already numeric variables.  With more time, our next idea was the use one hot encoding, which makes a sparse matrix using flags on every possible value of that variable.
 
+Our final model will be an ensemble of the CLRM model and the XGBoost models. 
+
 ## Suggestions to Grupo Bimbo for further data mining value
 
 * Longer historical records would allow for detection of seasonality and long term trends
-* Clustering on products - Currently if a new product is in the test set, we have to use the overall product average in the CLRM model. If we had products clustered by product attributes and similar demand patterns, we could improve predictions for newly released products. 
-* Clustering or categorization of clients - 
+* Clustering on products - Currently if a new product is in the test set, we have to use the overall product average in the CLRM model. If we had products clustered by product attributes and similar demand patterns, we could improve predictions for newly released products
+* Clustering or categorization of clients - Bimbo products are sold in grocery stores, convenience stores, and used at hamburger joints and other restaurants that have different needs for product types.

@@ -13,6 +13,11 @@ library(broom)
 setwd("/Volumes/Half_Dome/datasets/grupo-bimbo/")
 load("train1.Rdata")
 load("test.Rdata")
+load("train2.Rdata")
+load("validate.Rdata")
+
+train <- train2
+test  <- validate
 
 ```
 
@@ -21,23 +26,23 @@ This model predicts that the demand for a product is the mean of the log of dema
 
 ```{r}
 # Calculate the log of demand (log(demand+1))
-train1$log_demand <- log1p(train1$demand)
+train$log_demand <- log1p(train$demand)
 
 # Find the overall mean demand
-overall <- mean(train1$log_demand)
+overall <- mean(train$log_demand)
 
 # Product mean demand
-product <- train1 %>%
+product <- train %>%
   group_by(product) %>%
   summarise(p_d = mean(log_demand))
 
 # Product/Client mean demand
-product_route <- train1 %>%
+product_route <- train %>%
   group_by(product, route) %>%
   summarise(p_r_d = mean(log_demand))
 
 # Product/Client/Depot mean demand
-product_client_depot <- train1 %>%
+product_client_depot <- train %>%
   group_by(product, client, depot) %>%
   summarise(p_c_d_d = mean(log_demand))
 ```
@@ -45,7 +50,7 @@ product_client_depot <- train1 %>%
 Merge train data with all rows with mean models.
 
 ```{r}
-mean_mod <- left_join(train1, product_client_depot, by = c("product", "client", "depot"))
+mean_mod <- left_join(train, product_client_depot, by = c("product", "client", "depot"))
 mean_mod <- left_join(mean_mod, product_route, by = c("product", "route"))
 mean_mod <- left_join(mean_mod, product, by = "product")
 
@@ -54,7 +59,7 @@ mean_mod <- mean_mod %>% select(-sales_units, -sales, -returns_units, -returns)
 
 ```{r}
 
-mean_mod <- train1[product_client_depot]
+mean_mod <- train[product_client_depot]
 ```
 
 
