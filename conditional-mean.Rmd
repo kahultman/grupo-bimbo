@@ -107,6 +107,7 @@ write.csv(submit_cond_mean, file = "submit_cond_mean.csv", row.names = FALSE)
 ```
 
 
+
 ```{r submit validate}
 
 submit_cond_mean <- test %>% select(week, depot, channel, route, client, product, demand, pred)

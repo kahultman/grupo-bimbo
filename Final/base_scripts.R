@@ -33,3 +33,9 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     }
   }
 }
+
+RMSLE <- function(prediction, actual){
+  sqerror <- (log(prediction + 1) - log(actual + 1))^2
+  epsilon <- sqrt(sum(sqerror) / length(sqerror))
+  return(epsilon)
+}
