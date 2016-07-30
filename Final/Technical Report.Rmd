@@ -159,7 +159,9 @@ The next model we started to develop is an Extreme Gradient Boosting (XGBoost) m
 
 XGBoost only works with numeric vectors, so the biggest effort is preparing the data in order for it to run properly.  This included joining additional indicator variables to the train dataset from the other datasets provided and creating lag demand variables.  Our goal was to have the model include: demand, lag of demand, weight, pieces, and brand.
 
-The unexpected issue that we ran into was the difficulty of getting the data properly prepared; this turned into a much more difficult task than anticipated.  To turn character variables into numeric, we first tried using a spread function, which transposes the possible outputs of a character variable into individual binary variables.  Unfortunately, this command was not producing the output desired and, in turn, gave us unusable data to run the model.  With limited time, we decided to only use the already numeric variables.  With more time, our next idea was the use one hot encoding, which makes a sparse matrix using flags on every possible value of that variable.
+The unexpected issue that we ran into was the difficulty of getting the data properly prepared; this turned into a much more difficult task than anticipated.  To turn character variables into numeric, we first tried using a spread function, which transposes the possible outputs of a character variable into individual binary variables.  Unfortunately, this command was not producing the output desired and, in turn, gave us unusable data to run the model.  With limited time, we decided to only use the demand and lag demand variables, tested on our validate data.  With more time, our next idea was the use one hot encoding, which makes a sparse matrix using flags on every possible value of that variable and then run it against the test data.
+
+We got an RMSLE score of 0.6249
 
 Our final model will be an ensemble of the CLRM model and the XGBoost models. 
 
