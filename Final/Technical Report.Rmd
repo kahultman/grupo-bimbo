@@ -9,14 +9,6 @@ output:
     
 ---
 
-```{r setup, include=FALSE}
-library(dplyr)
-library(grid)
-library(ggplot2)
-setwd("~/github/grupo-bimbo/Final/")
-source("base_scripts.R")
-```
-
 # Grupo Bimbo Technical Report
 
 ## Project Overview
@@ -152,6 +144,9 @@ Thus far we have been creating models with features available from the raw data 
 1. Product Brand
 2. Product Weight
 3. Product number of pieces
+4. Lag demand 1: demand last week
+5. Lag demand 2: demand two weeks ago
+6. Lag demand 3: demand three weeks ago
 
 ## Modelling 3: XGBoost
 
@@ -163,5 +158,6 @@ The unexpected issue that we ran into was the difficulty of getting the data pro
 
 ## Suggestions to Grupo Bimbo for further data mining value
 
-* Better Data Collection
+* Longer historical records would allow for detection of seasonality and long term trends
 * Clustering on products - Currently if a new product is in the test set, we have to use the overall product average in the CLRM model. If we had products clustered by product attributes and similar demand patterns, we could improve predictions for newly released products. 
+* Clustering or categorization of clients - 
