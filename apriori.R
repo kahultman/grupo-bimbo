@@ -25,7 +25,7 @@ transactionfile <- file("transactions9.txt")
 writeLines(unlist(lapply(basket, paste, collapse=" ")), con = transactionfile)
 close(transactionfile)
 
-#write(trans, file = "transactions.txt", sep = ",")
+
 
 basket <- read.transactions("transactions9.txt", format = "basket", sep = " ", rm.duplicates = TRUE)
 
