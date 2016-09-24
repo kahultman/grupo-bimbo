@@ -39,3 +39,42 @@ RMSLE <- function(prediction, actual){
   epsilon <- sqrt(sum(sqerror) / length(sqerror))
   return(epsilon)
 }
+
+
+add_lag <- function(x){
+  
+  x <- x %>% 
+    mutate(ind = 1) #Create indicator to identify original observations
+  
+  #Prep data to make Excplicit zeros with dummy variable to match later
+  #Determine what's the earliest week for each product by client and depot
+  groupings <- x %>%
+    group_by(product, client, depot) %>%
+    summarise(earliest_week=min(week),
+              dummy=1)
+  
+  #Create list of weeks
+  fulldates <- data.frame(week=sort(unique(x$week)), dummy=1)
+  
+  #combine combinations and dates using dummy variable (all possible combinatons including missing rows)
+  groupings <- groupings %>%
+    left_join(fulldates, by="dummy") %>%
+    filter(week>=earliest_week) #Only keep weeks starting with earliest sales (assuming no sale before first sale)
+  
+  #Left join train data back on
+  x <- groupings %>%
+    left_join(x, by=c("product", "week", "client", "depot")) 
+  
+  #create lag demand
+  x <- x %>% 
+    group_by(product, client, depot) %>%
+    arrange(week) %>% 
+    mutate(lag1=lag(demand), lag2=lag(demand, n=2), lag3=lag(demand, n=3)) %>% 
+    filter(ind == 1) %>% 
+    select(-dummy, -ind)
+  
+  # N/As to 0
+  x[is.na(x)] <- 0
+  
+  return(x)
+}
